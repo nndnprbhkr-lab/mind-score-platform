@@ -3,25 +3,30 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color primary = Color(0xFF4F46E5);
-  static const Color primaryLight = Color(0xFF818CF8);
-  static const Color primaryDark = Color(0xFF3730A3);
+  // Cosmic Intelligence palette
+  static const Color primaryDark   = Color(0xFF1E0F3C);
+  static const Color primaryMid    = Color(0xFF2A1850);
+  static const Color accent        = Color(0xFF6B35C8);
+  static const Color accentLight   = Color(0xFFA67CF0);
+  static const Color highlight     = Color(0xFFFF6B9D);
+  static const Color surface       = Color(0xFFEDE8FF);
+  static const Color backgroundDark = Color(0xFF150A28);
+  static const Color textPrimary   = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFF9A85C8);
+  static const Color textMuted     = Color(0xFF5A4080);
+  static const Color cardBorder    = Color(0xFF3D2070);
 
-  static const Color secondary = Color(0xFF06B6D4);
-  static const Color secondaryLight = Color(0xFF67E8F9);
+  // Semantic aliases used throughout the app
+  static const Color primary        = accent;
+  static const Color primaryLight   = accentLight;
+  static const Color secondary      = highlight;
+  static const Color backgroundLight = backgroundDark;
+  static const Color surfaceDark    = primaryMid;
+  static const Color textDisabled   = textMuted;
+  static const Color divider        = cardBorder;
 
+  // Status colours (unchanged)
   static const Color success = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
-  static const Color error = Color(0xFFEF4444);
-
-  static const Color backgroundLight = Color(0xFFF9FAFB);
-  static const Color backgroundDark = Color(0xFF111827);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFF1F2937);
-
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textDisabled = Color(0xFF9CA3AF);
-
-  static const Color divider = Color(0xFFE5E7EB);
+  static const Color error   = Color(0xFFEF4444);
 }
