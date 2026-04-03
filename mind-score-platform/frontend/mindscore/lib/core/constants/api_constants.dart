@@ -2,7 +2,7 @@ class ApiConstants {
   ApiConstants._();
 
   static const String _devBaseUrl = 'http://localhost:5041';
-  static const String _prodBaseUrl = 'https://mindscore-api.onrender.com';
+  static const String _prodBaseUrl = 'https://mind-score-backend.onrender.com';
 
   static const bool _isProduction = bool.fromEnvironment('dart.vm.product');
 
