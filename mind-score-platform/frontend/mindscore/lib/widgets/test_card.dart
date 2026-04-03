@@ -6,20 +6,20 @@ class TestCard extends StatelessWidget {
   final String description;
   final int questionCount;
   final int durationMinutes;
-  final String difficulty;
+  final String? difficulty;
   final VoidCallback onStart;
 
   const TestCard({
     super.key,
     required this.title,
-    required this.description,
+    this.description = '',
     required this.questionCount,
     required this.durationMinutes,
-    required this.difficulty,
+    this.difficulty,
     required this.onStart,
   });
 
-  Color get _difficultyColor => switch (difficulty.toLowerCase()) {
+  Color get _difficultyColor => switch (difficulty?.toLowerCase()) {
         'easy' => AppColors.success,
         'medium' => AppColors.warning,
         'hard' => AppColors.error,
@@ -46,32 +46,35 @@ class TestCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _difficultyColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    difficulty,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: _difficultyColor,
-                      fontWeight: FontWeight.w600,
+                if (difficulty != null && difficulty!.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _difficultyColor.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      difficulty!,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: _difficultyColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textSecondary,
-                height: 1.5,
+            if (description.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 12),

@@ -16,6 +16,7 @@ build/
 
 # Environment
 .env
+appsettings.Development.json
 
 # OS
 .DS_Store

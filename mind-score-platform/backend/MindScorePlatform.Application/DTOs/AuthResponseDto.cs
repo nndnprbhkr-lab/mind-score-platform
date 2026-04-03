@@ -1,3 +1,3 @@
 namespace MindScorePlatform.Application.DTOs;
 
-public sealed record AuthResponseDto(Guid UserId, string Email, string AccessToken);
+public sealed record AuthResponseDto(Guid UserId, string Email, string AccessToken, bool IsAdmin);

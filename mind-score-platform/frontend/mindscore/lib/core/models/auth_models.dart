@@ -79,11 +79,13 @@ class AuthResponse {
   final String userId;
   final String email;
   final String token;
+  final bool isAdmin;
 
   const AuthResponse({
     required this.userId,
     required this.email,
     required this.token,
+    this.isAdmin = false,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -91,6 +93,7 @@ class AuthResponse {
       userId: json['userId'] as String,
       email: json['email'] as String,
       token: json['accessToken'] as String,
+      isAdmin: json['isAdmin'] as bool? ?? false,
     );
   }
 }

@@ -14,12 +14,14 @@ class ResultsScreen extends ConsumerWidget {
     final test = ref.watch(testProvider);
     final isDesktop = Responsive.isDesktop(context);
 
-    final answered = test.selectedAnswers.values
-        .where((v) => v != null)
-        .length;
     final total = test.questions.length;
-    final correct = answered;
-    final percent = total > 0 ? (correct / total * 100).round() : 0;
+    final answered = test.selectedAnswers.values.where((v) => v != null).length;
+    // Use the backend Likert score (1–5) normalised to 0–100.
+    // Falls back to completion rate when the result hasn't been returned yet.
+    final backendScore = test.result?.score;
+    final percent = backendScore != null
+        ? (((backendScore - 1) / 4) * 100).round().clamp(0, 100)
+        : (total > 0 ? (answered / total * 100).round() : 0);
 
     Color scoreColor;
     String grade;

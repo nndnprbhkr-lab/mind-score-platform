@@ -54,7 +54,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (saved != null) {
       state = AuthState(
         isAuthenticated: true,
-        isAdmin: saved.email.contains('admin'),
+        isAdmin: saved.isAdmin,
         userId: saved.userId,
         email: saved.email,
         token: saved.token,
@@ -65,7 +65,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void _applyResponse(AuthResponse response) {
     state = AuthState(
       isAuthenticated: true,
-      isAdmin: response.email.contains('admin'),
+      isAdmin: response.isAdmin,
       userId: response.userId,
       email: response.email,
       token: response.token,
@@ -84,6 +84,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         token: response.token,
         userId: response.userId,
         email: response.email,
+        isAdmin: response.isAdmin,
       );
       _applyResponse(response);
     } on ApiException catch (e) {
@@ -105,6 +106,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         token: response.token,
         userId: response.userId,
         email: response.email,
+        isAdmin: response.isAdmin,
       );
       _applyResponse(response);
     } on ApiException catch (e) {

@@ -40,7 +40,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.test,
         pageBuilder: (ctx, state) {
-          return _fadePage(const TestScreen(), state);
+          final testId = state.pathParameters['testId'] ?? '';
+          final testName = state.extra as String? ?? '';
+          return _fadePage(TestScreen(testId: testId, testName: testName), state);
         },
       ),
       GoRoute(

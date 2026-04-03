@@ -9,7 +9,10 @@ import '../../../widgets/question_widget.dart';
 import '../../../widgets/timer_widget.dart';
 
 class TestScreen extends ConsumerStatefulWidget {
-  const TestScreen({super.key});
+  final String testId;
+  final String testName;
+
+  const TestScreen({super.key, required this.testId, this.testName = ''});
 
   @override
   ConsumerState<TestScreen> createState() => _TestScreenState();
@@ -19,7 +22,9 @@ class _TestScreenState extends ConsumerState<TestScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(testProvider.notifier).loadTest(''));
+    Future.microtask(() => ref
+        .read(testProvider.notifier)
+        .loadTest(widget.testId, testName: widget.testName));
   }
 
   Future<void> _confirmSubmit() async {

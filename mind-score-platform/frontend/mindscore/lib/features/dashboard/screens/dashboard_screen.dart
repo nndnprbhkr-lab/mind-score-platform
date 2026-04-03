@@ -5,39 +5,19 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../dashboard/providers/tests_provider.dart';
+import '../../results/providers/results_provider.dart';
 import '../../../widgets/test_card.dart';
 import '../../../widgets/result_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
-  static const _mockTests = [
-    {
-      'title': 'Cognitive Aptitude Test',
-      'description': 'Measures logical reasoning, verbal ability, and numerical skills.',
-      'questions': 30,
-      'duration': 25,
-      'difficulty': 'Medium',
-    },
-    {
-      'title': 'Emotional Intelligence',
-      'description': 'Assesses self-awareness, empathy, and social skills.',
-      'questions': 20,
-      'duration': 15,
-      'difficulty': 'Easy',
-    },
-    {
-      'title': 'Critical Thinking',
-      'description': 'Evaluates analytical reasoning and problem-solving ability.',
-      'questions': 25,
-      'duration': 30,
-      'difficulty': 'Hard',
-    },
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
+    final testsState = ref.watch(testsProvider);
+    final resultsState = ref.watch(resultsProvider);
     final isDesktop = Responsive.isDesktop(context);
     final theme = Theme.of(context);
 
@@ -135,13 +115,13 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildWelcomeBanner(context, auth),
+              _buildWelcomeBanner(context, auth, testsState),
               const SizedBox(height: 32),
-              _buildStatsRow(context),
+              _buildStatsRow(context, resultsState),
               const SizedBox(height: 32),
-              _buildAvailableTests(context),
+              _buildAvailableTests(context, ref, testsState),
               const SizedBox(height: 32),
-              _buildRecentResults(context),
+              _buildRecentResults(context, resultsState),
             ],
           ),
         ),
@@ -149,8 +129,9 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWelcomeBanner(BuildContext context, AuthState auth) {
+  Widget _buildWelcomeBanner(BuildContext context, AuthState auth, TestsState testsState) {
     final theme = Theme.of(context);
+    final firstTest = testsState.tests.isNotEmpty ? testsState.tests.first : null;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -187,7 +168,9 @@ class DashboardScreen extends ConsumerWidget {
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primary,
                   ),
-                  onPressed: () {},
+                  onPressed: firstTest == null
+                      ? null
+                      : () => context.go(AppRoutes.testWithId(firstTest.id), extra: firstTest.name),
                   child: const Text('Take a Test'),
                 ),
               ],
@@ -200,13 +183,20 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context) {
+  Widget _buildStatsRow(BuildContext context, ResultsState resultsState) {
     final theme = Theme.of(context);
+    final results = resultsState.results;
+    final scores = results.map((r) => ((r.score - 1) / 4 * 100)).toList();
+    final avgScore = scores.isEmpty
+        ? null
+        : (scores.reduce((a, b) => a + b) / scores.length).round();
+    final bestScore = scores.isEmpty ? null : scores.reduce((a, b) => a > b ? a : b).round();
+
     final stats = [
-      {'label': 'Tests Taken', 'value': '12', 'icon': Icons.quiz_outlined},
-      {'label': 'Avg Score', 'value': '78%', 'icon': Icons.bar_chart_rounded},
-      {'label': 'Best Score', 'value': '94%', 'icon': Icons.star_rounded},
-      {'label': 'Streak', 'value': '5 days', 'icon': Icons.local_fire_department_rounded},
+      {'label': 'Tests Taken', 'value': '${results.length}', 'icon': Icons.quiz_outlined},
+      {'label': 'Avg Score', 'value': avgScore != null ? '$avgScore%' : '—', 'icon': Icons.bar_chart_rounded},
+      {'label': 'Best Score', 'value': bestScore != null ? '$bestScore%' : '—', 'icon': Icons.star_rounded},
+      {'label': 'Streak', 'value': '—', 'icon': Icons.local_fire_department_rounded},
     ];
 
     return LayoutBuilder(builder: (context, constraints) {
@@ -250,7 +240,7 @@ class DashboardScreen extends ConsumerWidget {
     });
   }
 
-  Widget _buildAvailableTests(BuildContext context) {
+  Widget _buildAvailableTests(BuildContext context, WidgetRef ref, TestsState testsState) {
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,25 +253,33 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ..._mockTests.map(
-          (t) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: TestCard(
-              title: t['title'] as String,
-              description: t['description'] as String,
-              questionCount: t['questions'] as int,
-              durationMinutes: t['duration'] as int,
-              difficulty: t['difficulty'] as String,
-              onStart: () {},
+        if (testsState.isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (testsState.error != null)
+          Text(testsState.error!,
+              style: TextStyle(color: AppColors.error))
+        else if (testsState.tests.isEmpty)
+          Text('No tests available.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary))
+        else
+          ...testsState.tests.map(
+            (t) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: TestCard(
+                title: t.name,
+                questionCount: t.questionCount,
+                durationMinutes: t.questionCount,
+                onStart: () => context.go(AppRoutes.testWithId(t.id), extra: t.name),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _buildRecentResults(BuildContext context) {
+  Widget _buildRecentResults(BuildContext context, ResultsState resultsState) {
     final theme = Theme.of(context);
+    final recent = resultsState.results.take(5).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -293,25 +291,30 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ResultCard(
-          testTitle: 'Cognitive Aptitude Test',
-          score: 82,
-          maxScore: 100,
-          correctAnswers: 25,
-          totalQuestions: 30,
-          completedAt: DateTime.now().subtract(const Duration(days: 2)),
-          onReview: () {},
-        ),
-        const SizedBox(height: 12),
-        ResultCard(
-          testTitle: 'Emotional Intelligence',
-          score: 68,
-          maxScore: 100,
-          correctAnswers: 14,
-          totalQuestions: 20,
-          completedAt: DateTime.now().subtract(const Duration(days: 5)),
-          onReview: () {},
-        ),
+        if (resultsState.isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (resultsState.error != null)
+          Text(resultsState.error!,
+              style: TextStyle(color: AppColors.error))
+        else if (recent.isEmpty)
+          Text('No results yet. Take a test to get started.',
+              style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary))
+        else
+          ...recent.asMap().entries.map((entry) {
+            final r = entry.value;
+            final normalizedScore = ((r.score - 1) / 4 * 100).round().clamp(0, 100);
+            return Padding(
+              padding: EdgeInsets.only(bottom: entry.key < recent.length - 1 ? 12 : 0),
+              child: ResultCard(
+                testTitle: r.testName,
+                score: normalizedScore,
+                maxScore: 100,
+                correctAnswers: normalizedScore,
+                totalQuestions: 100,
+                completedAt: r.createdAtUtc,
+              ),
+            );
+          }),
       ],
     );
   }

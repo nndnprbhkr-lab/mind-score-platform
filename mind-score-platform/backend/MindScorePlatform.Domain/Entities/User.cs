@@ -8,5 +8,7 @@ public sealed class User
 
     public string PasswordHash { get; set; } = string.Empty;
 
+    public string Role { get; set; } = "user";
+
     public DateTime CreatedAtUtc { get; set; }
 }

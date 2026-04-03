@@ -34,7 +34,7 @@ public sealed class AuthService : IAuthService
         await _users.AddAsync(user, cancellationToken);
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Email, token);
+        return new AuthResponseDto(user.Id, user.Email, token, user.Role == "admin");
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
@@ -51,6 +51,6 @@ public sealed class AuthService : IAuthService
         }
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Email, token);
+        return new AuthResponseDto(user.Id, user.Email, token, user.Role == "admin");
     }
 }
