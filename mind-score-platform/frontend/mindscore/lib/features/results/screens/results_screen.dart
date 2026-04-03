@@ -63,7 +63,7 @@ class ResultsScreen extends ConsumerWidget {
               children: [
                 _buildScoreCard(context, grade, percent, scoreColor, message),
                 const SizedBox(height: 24),
-                _buildBreakdown(context, correct, total, test),
+                _buildBreakdown(context, answered, total, test),
                 const SizedBox(height: 32),
                 _buildActions(context, ref),
               ],

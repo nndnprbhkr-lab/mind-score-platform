@@ -39,7 +39,7 @@ class ApiClient {
       headers: await _headers(auth: auth),
       body: jsonEncode(body),
     );
-    return _handle(response);
+    return _handleObject(response);
   }
 
   static Future<Map<String, dynamic>> get(
