@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mindscore-backend
+    env: docker
+    rootDir: mind-score-platform/backend
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Jwt__Issuer
+        value: MindScorePlatform
+      - key: Jwt__Audience
+        value: MindScorePlatform
+      - key: Jwt__Key
+        sync: false
+      - key: ConnectionStrings__Default
+        sync: false

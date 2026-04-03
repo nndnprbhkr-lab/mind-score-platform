@@ -1,0 +1,96 @@
+class TestModel {
+  final String id;
+  final String name;
+  final int questionCount;
+
+  const TestModel({required this.id, required this.name, required this.questionCount});
+
+  factory TestModel.fromJson(Map<String, dynamic> j) => TestModel(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        questionCount: j['questionCount'] as int,
+      );
+}
+
+class ApiQuestionModel {
+  final String id;
+  final String testId;
+  final String text;
+  final int order;
+
+  const ApiQuestionModel({
+    required this.id,
+    required this.testId,
+    required this.text,
+    required this.order,
+  });
+
+  factory ApiQuestionModel.fromJson(Map<String, dynamic> j) => ApiQuestionModel(
+        id: j['id'] as String,
+        testId: j['testId'] as String,
+        text: j['text'] as String,
+        order: j['order'] as int,
+      );
+}
+
+class ResultModel {
+  final String id;
+  final String testId;
+  final String testName;
+  final double score;
+  final DateTime createdAtUtc;
+
+  const ResultModel({
+    required this.id,
+    required this.testId,
+    required this.testName,
+    required this.score,
+    required this.createdAtUtc,
+  });
+
+  factory ResultModel.fromJson(Map<String, dynamic> j) => ResultModel(
+        id: j['id'] as String,
+        testId: j['testId'] as String,
+        testName: j['testName'] as String,
+        score: (j['score'] as num).toDouble(),
+        createdAtUtc: DateTime.parse(j['createdAtUtc'] as String),
+      );
+}
+
+class LoginRequest {
+  final String email;
+  final String password;
+
+  const LoginRequest({required this.email, required this.password});
+
+  Map<String, dynamic> toJson() => {'email': email, 'password': password};
+}
+
+class RegisterRequest {
+  final String email;
+  final String password;
+
+  const RegisterRequest({required this.email, required this.password});
+
+  Map<String, dynamic> toJson() => {'email': email, 'password': password};
+}
+
+class AuthResponse {
+  final String userId;
+  final String email;
+  final String token;
+
+  const AuthResponse({
+    required this.userId,
+    required this.email,
+    required this.token,
+  });
+
+  factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    return AuthResponse(
+      userId: json['userId'] as String,
+      email: json['email'] as String,
+      token: json['accessToken'] as String,
+    );
+  }
+}

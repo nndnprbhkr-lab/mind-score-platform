@@ -1,0 +1,24 @@
+flutter/
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.env
+# Flutter SDK
+flutter/
+*.zip
+
+# Build outputs
+bin/
+obj/
+build/
+.dart_tool/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+
+# Logs
+*.log
