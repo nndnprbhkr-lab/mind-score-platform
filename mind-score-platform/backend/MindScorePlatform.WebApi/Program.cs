@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics;
 using MindScorePlatform.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,7 +57,22 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseExceptionHandler("/error");
+app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
+{
+    var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+    var message = exception?.Message ?? "An unexpected error occurred.";
+
+    context.Response.StatusCode = exception switch
+    {
+        KeyNotFoundException        => StatusCodes.Status404NotFound,
+        UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+        InvalidOperationException   => StatusCodes.Status400BadRequest,
+        _                           => StatusCodes.Status500InternalServerError,
+    };
+
+    context.Response.ContentType = "application/problem+json";
+    await context.Response.WriteAsJsonAsync(new { title = message, status = context.Response.StatusCode });
+}));
 
 if (!app.Environment.IsProduction())
 {
