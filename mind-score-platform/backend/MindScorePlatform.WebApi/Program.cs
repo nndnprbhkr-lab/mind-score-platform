@@ -65,6 +65,8 @@ if (!app.Environment.IsProduction())
 
 app.UseHttpLogging();
 
+app.UseCors();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
