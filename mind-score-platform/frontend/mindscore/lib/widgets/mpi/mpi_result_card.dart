@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/models/mpi_models.dart';
+import '../../features/dashboard/providers/tests_provider.dart';
 import '../../features/results/providers/mpi_result_provider.dart';
 import 'mpi_dimension_tooltip.dart';
 import 'mpi_legend_collapsible.dart';
@@ -588,11 +589,14 @@ class _FooterButton extends StatelessWidget {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-class _EmptyStateCard extends StatelessWidget {
+class _EmptyStateCard extends ConsumerWidget {
   const _EmptyStateCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tests = ref.watch(testsProvider).tests;
+    final mpiTest = tests.isNotEmpty ? tests.first : null;
+
     return Container(
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
@@ -623,7 +627,12 @@ class _EmptyStateCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => context.go(AppRoutes.dashboard),
+              onPressed: mpiTest == null
+                  ? null
+                  : () => context.go(
+                        AppRoutes.testWithId(mpiTest.id),
+                        extra: mpiTest.name,
+                      ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kAccent,
                 foregroundColor: Colors.white,
