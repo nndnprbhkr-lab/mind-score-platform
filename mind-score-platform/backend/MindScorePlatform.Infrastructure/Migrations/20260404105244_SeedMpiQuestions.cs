@@ -14,6 +14,11 @@ namespace MindScorePlatform.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.InsertData(
+                table: "Tests",
+                columns: new[] { "Id", "CreatedAtUtc", "Name" },
+                values: new object[] { new Guid("00000000-0000-0000-0000-000000000001"), new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "MPI Assessment" });
+
+            migrationBuilder.InsertData(
                 table: "Questions",
                 columns: new[] { "Id", "Code", "CreatedAtUtc", "Order", "TestId", "Text" },
                 values: new object[,]
@@ -39,11 +44,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     { new Guid("00000000-0000-0000-0001-000000000019"), "JP_04_R", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 19, new Guid("00000000-0000-0000-0000-000000000001"), "I often decide things at the last moment and feel perfectly comfortable doing so." },
                     { new Guid("00000000-0000-0000-0001-000000000020"), "JP_05", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 20, new Guid("00000000-0000-0000-0000-000000000001"), "I prefer to have things resolved and settled rather than leaving them open-ended." }
                 });
-
-            migrationBuilder.InsertData(
-                table: "Tests",
-                columns: new[] { "Id", "CreatedAtUtc", "Name" },
-                values: new object[] { new Guid("00000000-0000-0000-0000-000000000001"), new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "MPI Assessment" });
         }
 
         /// <inheritdoc />

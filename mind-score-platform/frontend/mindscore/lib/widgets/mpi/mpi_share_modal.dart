@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/models/mpi_models.dart';
@@ -65,11 +63,8 @@ class _MpiShareModalState extends State<_MpiShareModal> {
         return;
       }
 
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/mindscore_mpi_result.png');
-      await file.writeAsBytes(bytes);
       await Share.shareXFiles(
-        [XFile(file.path)],
+        [XFile.fromData(bytes, name: 'mindscore_mpi_result.png', mimeType: 'image/png')],
         text: 'I am ${widget.result.typeName} on the MindScore MPI. '
             'Discover yours at mindscore.app',
       );
@@ -89,10 +84,9 @@ class _MpiShareModalState extends State<_MpiShareModal> {
         return;
       }
 
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/mindscore_mpi_result.png');
-      await file.writeAsBytes(bytes);
-      await Share.shareXFiles([XFile(file.path)]);
+      await Share.shareXFiles(
+        [XFile.fromData(bytes, name: 'mindscore_mpi_result.png', mimeType: 'image/png')],
+      );
     } finally {
       if (mounted) setState(() => _capturingPlatform = null);
     }
