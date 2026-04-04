@@ -208,33 +208,6 @@ class _BannerRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-
-          // Score badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: _kOuter,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _kOuterBorder, width: 0.5),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '${result.overallScore}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: _kLight,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Text(
-                  'Score',
-                  style: TextStyle(fontSize: 10, color: _kMuted),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );

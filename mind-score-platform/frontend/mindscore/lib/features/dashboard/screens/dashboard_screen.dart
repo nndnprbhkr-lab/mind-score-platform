@@ -7,6 +7,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/models/auth_models.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/results/providers/mpi_result_provider.dart';
 import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_result_card.dart';
 import '../../dashboard/providers/tests_provider.dart';
@@ -476,20 +477,17 @@ class _GreetingSection extends StatelessWidget {
 // ─────────────────────────────────────────────────────
 // Stats
 // ─────────────────────────────────────────────────────
-class _StatsRow extends StatelessWidget {
+class _StatsRow extends ConsumerWidget {
   final ResultsState resultsState;
   final int columns;
 
   const _StatsRow({required this.resultsState, required this.columns});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final results = resultsState.results;
-    final scores = results
-        .map((r) => ((r.score - 1) / 4 * 100).round().clamp(0, 100))
-        .toList();
-    final best =
-        scores.isEmpty ? null : scores.reduce((a, b) => a > b ? a : b);
+    final mpiAsync = ref.watch(mpiResultProvider);
+    final mpi = mpiAsync.valueOrNull;
 
     final stats = [
       _StatData(
@@ -499,12 +497,12 @@ class _StatsRow extends StatelessWidget {
       ),
       _StatData(
         emoji: '🏆',
-        value: best != null ? '$best%' : '—',
-        label: 'Best Score',
+        value: mpi != null ? (mpi.typeCode.isNotEmpty ? mpi.typeCode : '—') : '—',
+        label: 'Type Code',
       ),
       _StatData(
         emoji: '🧠',
-        value: _personalityType(results.isNotEmpty ? scores.last : null),
+        value: mpi != null ? mpi.emoji : '—',
         label: 'Personality',
       ),
       if (columns == 4)
@@ -517,7 +515,7 @@ class _StatsRow extends StatelessWidget {
 
     return LayoutBuilder(builder: (context, constraints) {
       final cols = columns.clamp(1, stats.length);
-      final spacing = 12.0;
+      const spacing = 12.0;
       final itemWidth =
           (constraints.maxWidth - spacing * (cols - 1)) / cols;
 
@@ -535,13 +533,6 @@ class _StatsRow extends StatelessWidget {
         }).toList(),
       );
     });
-  }
-
-  String _personalityType(int? lastScore) {
-    if (lastScore == null) return '—';
-    if (lastScore >= 80) return 'INTJ';
-    if (lastScore >= 60) return 'ENFP';
-    return 'ISFJ';
   }
 }
 
