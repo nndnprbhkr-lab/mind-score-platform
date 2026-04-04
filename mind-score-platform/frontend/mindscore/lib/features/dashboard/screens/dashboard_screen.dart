@@ -459,12 +459,6 @@ class _StatsRow extends ConsumerWidget {
         value: personalityValue,
         label: 'Personality',
       ),
-      if (columns == 4)
-        _StatData(
-          emoji: '🔥',
-          value: '—',
-          label: 'Streak',
-        ),
     ];
 
     return LayoutBuilder(builder: (context, constraints) {
