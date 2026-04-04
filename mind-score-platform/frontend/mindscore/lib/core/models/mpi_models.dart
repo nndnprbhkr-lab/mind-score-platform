@@ -126,9 +126,9 @@ class MpiDimensionScore {
 
   factory MpiDimensionScore.fromJson(Map<String, dynamic> j) =>
       MpiDimensionScore(
-        percentage: (j['percentage'] as num).toDouble(),
-        dominantPole: j['dominantPole'] as String,
-        strength: j['strength'] as String,
+        percentage: ((j['percentage'] ?? j['Percentage']) as num).toDouble(),
+        dominantPole: (j['dominantPole'] ?? j['DominantPole']) as String,
+        strength: (j['strength'] ?? j['Strength']) as String,
       );
 }
 
@@ -144,6 +144,8 @@ class MpiResult {
   final List<String> strengths;
   final List<String> growthAreas;
   final List<String> careerPaths;
+  final String communicationStyle;
+  final String workStyle;
   final Map<String, MpiDimensionScore> dimensions;
   final DateTime completedAt;
 
@@ -159,6 +161,8 @@ class MpiResult {
     required this.strengths,
     required this.growthAreas,
     required this.careerPaths,
+    this.communicationStyle = '',
+    this.workStyle = '',
     required this.dimensions,
     required this.completedAt,
   });
@@ -185,6 +189,8 @@ class MpiResult {
       strengths: parseList('strengths'),
       growthAreas: parseList('growthAreas'),
       careerPaths: parseList('careerPaths'),
+      communicationStyle: rawInsights['communicationStyle'] as String? ?? '',
+      workStyle: rawInsights['workStyle'] as String? ?? '',
       dimensions: dims,
       completedAt: DateTime.parse(j['createdAtUtc'] as String),
     );

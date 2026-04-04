@@ -7,10 +7,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/models/auth_models.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/test/providers/test_provider.dart';
 import '../../../features/results/providers/mpi_result_provider.dart';
+import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_legend_header.dart';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -19,158 +21,48 @@ const _kPurpleLight = Color(0xFFA67CF0);
 const _kPink = Color(0xFFFF6B9D);
 const _kCardBg = Color(0xFF2A1850);
 const _kCardBorder = Color(0xFF3D2070);
-const _kTeal = Color(0xFF2E9E75);
 
-// ─── Personality type model ───────────────────────────────────────────────────
-class _PersonalityProfile {
-  final String type;
+// ─── MPI display data ─────────────────────────────────────────────────────────
+class _MpiDisplayData {
+  final String typeCode;
+  final String typeName;
   final String emoji;
   final String tagline;
-  final String description;
-  final Color color;
   final List<String> strengths;
   final List<String> growthAreas;
   final List<String> careerPaths;
   final String communicationStyle;
 
-  const _PersonalityProfile({
-    required this.type,
+  const _MpiDisplayData({
+    required this.typeCode,
+    required this.typeName,
     required this.emoji,
     required this.tagline,
-    required this.description,
-    required this.color,
     required this.strengths,
     required this.growthAreas,
     required this.careerPaths,
     required this.communicationStyle,
   });
 
-  static _PersonalityProfile fromScore(int percent) {
-    if (percent >= 80) return _analyst;
-    if (percent >= 60) return _visionary;
-    if (percent >= 40) return _driver;
-    return _supporter;
+  factory _MpiDisplayData.fromResult(ResultModel result) {
+    List<String> parseList(String key) {
+      final raw = result.insights?[key];
+      if (raw is List) return raw.cast<String>();
+      return [];
+    }
+
+    return _MpiDisplayData(
+      typeCode: result.typeCode ?? '',
+      typeName: result.typeName ?? 'Your MPI Profile',
+      emoji: result.emoji ?? '🧠',
+      tagline: result.tagline ?? '',
+      strengths: parseList('strengths'),
+      growthAreas: parseList('growthAreas'),
+      careerPaths: parseList('careerPaths'),
+      communicationStyle:
+          result.insights?['communicationStyle'] as String? ?? '',
+    );
   }
-
-  static const _analyst = _PersonalityProfile(
-    type: 'Analyst',
-    emoji: '🔬',
-    tagline: 'Logical · Precise · Strategic',
-    description:
-        'You approach problems with systematic logic and deep analytical thinking. '
-        'You excel at breaking down complexity into clear, actionable insights.',
-    color: _kPurple,
-    strengths: [
-      'Critical thinking & data analysis',
-      'Strategic long-term planning',
-      'Pattern recognition',
-      'Objective decision making',
-    ],
-    growthAreas: [
-      'Work-life balance',
-      'Emotional expression',
-      'Embracing ambiguity',
-    ],
-    careerPaths: [
-      '📊  Data Scientist',
-      '🏛️  Strategy Consultant',
-      '🔍  Research Analyst',
-      '🖥️  Software Architect',
-    ],
-    communicationStyle:
-        'Direct and precise — you prefer facts over feelings and value clear, '
-        'well-reasoned arguments.',
-  );
-
-  static const _visionary = _PersonalityProfile(
-    type: 'Visionary',
-    emoji: '✨',
-    tagline: 'Creative · Inspiring · Imaginative',
-    description:
-        'You see possibilities others miss and inspire those around you with your '
-        'big-picture thinking and infectious enthusiasm.',
-    color: _kPurpleLight,
-    strengths: [
-      'Creative problem solving',
-      'Big-picture vision',
-      'Inspiring & motivating others',
-      'Connecting disparate ideas',
-    ],
-    growthAreas: [
-      'Follow-through on details',
-      'Realistic planning',
-      'Managing time constraints',
-    ],
-    careerPaths: [
-      '🚀  Product Manager',
-      '💡  Entrepreneur',
-      '🎨  Creative Director',
-      '🎯  UX Designer',
-    ],
-    communicationStyle:
-        'Enthusiastic and imaginative — you paint vivid pictures with words and '
-        'bring energy to every conversation.',
-  );
-
-  static const _driver = _PersonalityProfile(
-    type: 'Driver',
-    emoji: '⚡',
-    tagline: 'Goal-oriented · Decisive · Results-driven',
-    description:
-        'You thrive under pressure and relentlessly pursue results. '
-        'Your determination and focus make you a natural leader when deadlines matter.',
-    color: _kPink,
-    strengths: [
-      'Goal achievement under pressure',
-      'Fast, confident decisions',
-      'Leading teams to results',
-      'Cutting through obstacles',
-    ],
-    growthAreas: [
-      'Patience with slower thinkers',
-      'Active listening',
-      'Collaborative approach',
-    ],
-    careerPaths: [
-      '📋  Project Manager',
-      '💼  Sales Director',
-      '⚙️  Operations Lead',
-      '📈  Business Developer',
-    ],
-    communicationStyle:
-        'Results-focused and assertive — you get straight to the point and '
-        'push for action over endless discussion.',
-  );
-
-  static const _supporter = _PersonalityProfile(
-    type: 'Supporter',
-    emoji: '🤝',
-    tagline: 'Empathetic · Reliable · Harmonious',
-    description:
-        'You build strong relationships and create environments where everyone '
-        'feels valued. Your emotional intelligence is your greatest strength.',
-    color: _kTeal,
-    strengths: [
-      'Deep empathy & active listening',
-      'Team cohesion & trust building',
-      'Conflict resolution',
-      'Consistent reliability',
-    ],
-    growthAreas: [
-      'Self-advocacy',
-      'Setting boundaries',
-      'Pursuing career ambition',
-    ],
-    careerPaths: [
-      '👥  HR Manager',
-      '💬  Counselor / Coach',
-      '⭐  Customer Success Lead',
-      '🌱  Community Manager',
-    ],
-    communicationStyle:
-        'Warm and considerate — you listen deeply before speaking and '
-        'prioritise harmony in every interaction.',
-  );
 }
 
 // ─── Results screen ───────────────────────────────────────────────────────────
@@ -184,19 +76,13 @@ class ResultsScreen extends ConsumerStatefulWidget {
 class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   bool _isDownloading = false;
 
-  int get _percent {
-    final score = ref.read(testProvider).result?.score;
-    if (score == null) return 0;
-    return (((score - 1) / 4) * 100).round().clamp(0, 100);
-  }
-
-  String get _topPercent {
-    final p = _percent;
-    if (p >= 90) return 'Top 5%';
-    if (p >= 80) return 'Top 10%';
-    if (p >= 70) return 'Top 25%';
-    if (p >= 60) return 'Top 50%';
-    return 'Top 75%';
+  @override
+  void initState() {
+    super.initState();
+    // Refresh results list so Reports tab is up-to-date immediately.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(resultsProvider.notifier).load();
+    });
   }
 
   String get _duration {
@@ -241,13 +127,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   Future<void> _shareResults() async {
-    final test = ref.read(testProvider);
-    final percent = _percent;
-    final profile = _PersonalityProfile.fromScore(percent);
-    final text =
-        'I scored $percent% on the ${test.result?.testName ?? "MindScore"} test!\n'
-        'My personality type: ${profile.type} (${profile.tagline})\n'
-        'Powered by MindScore — mind-score.app';
+    final result = ref.read(testProvider).result;
+    final text = 'I just discovered my personality type on MindScore!\n'
+        '${result?.emoji ?? '🧠'} ${result?.typeName ?? ''} (${result?.typeCode ?? ''})\n'
+        '"${result?.tagline ?? ''}"\n'
+        'Powered by MindScore — mind-score.com';
     await Clipboard.setData(ClipboardData(text: text));
     _showSnack('Results copied to clipboard — paste to share!');
   }
@@ -263,7 +147,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   Widget build(BuildContext context) {
     final test = ref.watch(testProvider);
 
-    // No result yet — shouldn't normally happen but guard anyway
     if (test.result == null && !test.isLoading) {
       return Scaffold(
         backgroundColor: AppColors.backgroundDark,
@@ -287,8 +170,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                   ref.read(testProvider.notifier).reset();
                   context.go(AppRoutes.dashboard);
                 },
-                style:
-                    FilledButton.styleFrom(backgroundColor: _kPurple),
+                style: FilledButton.styleFrom(backgroundColor: _kPurple),
                 child: const Text('Go to Dashboard'),
               ),
             ],
@@ -297,19 +179,27 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       );
     }
 
-    final percent = _percent;
-    final profile = _PersonalityProfile.fromScore(percent);
-    final topPct = _topPercent;
+    final result = test.result;
+    final mpiData = result != null
+        ? _MpiDisplayData.fromResult(result)
+        : const _MpiDisplayData(
+            typeCode: '',
+            typeName: 'Your Profile',
+            emoji: '🧠',
+            tagline: '',
+            strengths: [],
+            growthAreas: [],
+            careerPaths: [],
+            communicationStyle: '',
+          );
     final duration = _duration;
-    final testName = test.result?.testName ?? '';
+    final testName = result?.testName ?? '';
 
     return ResponsiveWrapper(
       mobile: (ctx) => _MobileLayout(
-        percent: percent,
-        topPercent: topPct,
+        mpiData: mpiData,
         duration: duration,
         testName: testName,
-        profile: profile,
         isDownloading: _isDownloading,
         onDownload: _downloadReport,
         onShare: _shareResults,
@@ -320,11 +210,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         ref: ref,
       ),
       desktop: (ctx) => _WideLayout(
-        percent: percent,
-        topPercent: topPct,
+        mpiData: mpiData,
         duration: duration,
         testName: testName,
-        profile: profile,
         isDownloading: _isDownloading,
         onDownload: _downloadReport,
         onShare: _shareResults,
@@ -342,11 +230,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 // Mobile layout
 // ─────────────────────────────────────────────────────────────────────────────
 class _MobileLayout extends StatelessWidget {
-  final int percent;
-  final String topPercent;
+  final _MpiDisplayData mpiData;
   final String duration;
   final String testName;
-  final _PersonalityProfile profile;
   final bool isDownloading;
   final VoidCallback onDownload;
   final VoidCallback onShare;
@@ -354,11 +240,9 @@ class _MobileLayout extends StatelessWidget {
   final WidgetRef ref;
 
   const _MobileLayout({
-    required this.percent,
-    required this.topPercent,
+    required this.mpiData,
     required this.duration,
     required this.testName,
-    required this.profile,
     required this.isDownloading,
     required this.onDownload,
     required this.onShare,
@@ -398,21 +282,14 @@ class _MobileLayout extends StatelessWidget {
               orElse: () => const SizedBox.shrink(),
             );
           }),
-          _HeroCard(
-            profile: profile,
-            percent: percent,
-            topPercent: topPercent,
-            compact: false,
-          ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06, end: 0),
+          _HeroCard(mpiData: mpiData)
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .slideY(begin: 0.06, end: 0),
 
           const SizedBox(height: 16),
 
-          _ScoreCardsRow(
-            percent: percent,
-            topPercent: topPercent,
-            duration: duration,
-            profile: profile,
-          )
+          _InfoCardsRow(mpiData: mpiData, duration: duration)
               .animate(delay: 80.ms)
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
@@ -422,7 +299,7 @@ class _MobileLayout extends StatelessWidget {
           _InsightCard(
             title: 'Your Strengths',
             dotColor: _kPurple,
-            items: profile.strengths,
+            items: mpiData.strengths,
           )
               .animate(delay: 140.ms)
               .fadeIn(duration: 350.ms)
@@ -433,7 +310,7 @@ class _MobileLayout extends StatelessWidget {
           _InsightCard(
             title: 'Growth Areas',
             dotColor: _kPurpleLight,
-            items: profile.growthAreas,
+            items: mpiData.growthAreas,
           )
               .animate(delay: 180.ms)
               .fadeIn(duration: 350.ms)
@@ -444,7 +321,7 @@ class _MobileLayout extends StatelessWidget {
           _InsightCard(
             title: 'Career Paths',
             dotColor: _kPink,
-            items: profile.careerPaths,
+            items: mpiData.careerPaths,
           )
               .animate(delay: 220.ms)
               .fadeIn(duration: 350.ms)
@@ -455,9 +332,7 @@ class _MobileLayout extends StatelessWidget {
           _DownloadButton(
             isLoading: isDownloading,
             onTap: onDownload,
-          )
-              .animate(delay: 280.ms)
-              .fadeIn(duration: 300.ms),
+          ).animate(delay: 280.ms).fadeIn(duration: 300.ms),
 
           const SizedBox(height: 12),
 
@@ -474,11 +349,9 @@ class _MobileLayout extends StatelessWidget {
 // Tablet / Desktop (wide) layout
 // ─────────────────────────────────────────────────────────────────────────────
 class _WideLayout extends StatelessWidget {
-  final int percent;
-  final String topPercent;
+  final _MpiDisplayData mpiData;
   final String duration;
   final String testName;
-  final _PersonalityProfile profile;
   final bool isDownloading;
   final VoidCallback onDownload;
   final VoidCallback onShare;
@@ -486,11 +359,9 @@ class _WideLayout extends StatelessWidget {
   final WidgetRef ref;
 
   const _WideLayout({
-    required this.percent,
-    required this.topPercent,
+    required this.mpiData,
     required this.duration,
     required this.testName,
-    required this.profile,
     required this.isDownloading,
     required this.onDownload,
     required this.onShare,
@@ -522,21 +393,15 @@ class _WideLayout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _HeroCard(
-                    profile: profile,
-                    percent: percent,
-                    topPercent: topPercent,
-                    compact: true,
-                  ).animate().fadeIn(duration: 400.ms),
+                  _HeroCard(mpiData: mpiData)
+                      .animate()
+                      .fadeIn(duration: 400.ms),
 
                   const SizedBox(height: 20),
 
-                  _ScoreCardsRow(
-                    percent: percent,
-                    topPercent: topPercent,
-                    duration: duration,
-                    profile: profile,
-                  ).animate(delay: 80.ms).fadeIn(duration: 350.ms),
+                  _InfoCardsRow(mpiData: mpiData, duration: duration)
+                      .animate(delay: 80.ms)
+                      .fadeIn(duration: 350.ms),
 
                   const SizedBox(height: 24),
 
@@ -547,7 +412,7 @@ class _WideLayout extends StatelessWidget {
                         child: _InsightCard(
                           title: 'Your Strengths',
                           dotColor: _kPurple,
-                          items: profile.strengths,
+                          items: mpiData.strengths,
                         ).animate(delay: 140.ms).fadeIn(duration: 350.ms),
                       ),
                       const SizedBox(width: 16),
@@ -555,7 +420,7 @@ class _WideLayout extends StatelessWidget {
                         child: _InsightCard(
                           title: 'Growth Areas',
                           dotColor: _kPurpleLight,
-                          items: profile.growthAreas,
+                          items: mpiData.growthAreas,
                         ).animate(delay: 180.ms).fadeIn(duration: 350.ms),
                       ),
                     ],
@@ -579,14 +444,15 @@ class _WideLayout extends StatelessWidget {
                   _InsightCard(
                     title: 'Career Paths',
                     dotColor: _kPink,
-                    items: profile.careerPaths,
+                    items: mpiData.careerPaths,
                   ).animate(delay: 200.ms).fadeIn(duration: 350.ms),
 
                   const SizedBox(height: 16),
 
-                  _CommunicationCard(profile: profile)
-                      .animate(delay: 240.ms)
-                      .fadeIn(duration: 350.ms),
+                  if (mpiData.communicationStyle.isNotEmpty)
+                    _CommunicationCard(
+                      communicationStyle: mpiData.communicationStyle,
+                    ).animate(delay: 240.ms).fadeIn(duration: 350.ms),
 
                   const SizedBox(height: 24),
 
@@ -614,70 +480,13 @@ class _WideLayout extends StatelessWidget {
 // Hero card
 // ─────────────────────────────────────────────────────────────────────────────
 class _HeroCard extends StatelessWidget {
-  final _PersonalityProfile profile;
-  final int percent;
-  final String topPercent;
-  final bool compact;
+  final _MpiDisplayData mpiData;
 
-  const _HeroCard({
-    required this.profile,
-    required this.percent,
-    required this.topPercent,
-    required this.compact,
-  });
+  const _HeroCard({required this.mpiData});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final emojiAndType = Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(profile.emoji, style: const TextStyle(fontSize: 56)),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Score with gradient
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [_kPurple, _kPink],
-                ).createShader(bounds),
-                child: Text(
-                  '$percent%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 52,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Top X% badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _kPink.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border:
-                      Border.all(color: _kPink.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  topPercent,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: _kPink,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -689,49 +498,66 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          emojiAndType,
-          const SizedBox(height: 20),
-
-          // Type badge
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: profile.color.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                      color: profile.color.withValues(alpha: 0.5)),
-                ),
-                child: Text(
-                  profile.type,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: profile.color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  profile.tagline,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              Text(mpiData.emoji, style: const TextStyle(fontSize: 56)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [_kPurple, _kPink],
+                      ).createShader(bounds),
+                      child: Text(
+                        mpiData.typeName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                    if (mpiData.typeCode.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _kPurple.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: _kPurple.withValues(alpha: 0.5)),
+                        ),
+                        child: Text(
+                          mpiData.typeCode,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: _kPurpleLight,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
 
-          Text(
-            profile.description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.6,
+          if (mpiData.tagline.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              mpiData.tagline,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.6,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -739,38 +565,31 @@ class _HeroCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Score cards row (3 mini cards)
+// Info cards row (3 mini cards)
 // ─────────────────────────────────────────────────────────────────────────────
-class _ScoreCardsRow extends StatelessWidget {
-  final int percent;
-  final String topPercent;
+class _InfoCardsRow extends StatelessWidget {
+  final _MpiDisplayData mpiData;
   final String duration;
-  final _PersonalityProfile profile;
 
-  const _ScoreCardsRow({
-    required this.percent,
-    required this.topPercent,
-    required this.duration,
-    required this.profile,
-  });
+  const _InfoCardsRow({required this.mpiData, required this.duration});
 
   @override
   Widget build(BuildContext context) {
     final cards = [
-      _MiniScoreCard(
-        label: 'Score',
-        value: '$percent%',
-        color: _kPurple,
+      _MiniInfoCard(
+        label: 'Type Code',
+        value: mpiData.typeCode.isNotEmpty ? mpiData.typeCode : '—',
+        color: _kPurpleLight,
       ),
-      _MiniScoreCard(
-        label: 'Ranking',
-        value: topPercent,
+      _MiniInfoCard(
+        label: 'Assessment',
+        value: 'MPI',
         color: _kPink,
       ),
-      _MiniScoreCard(
+      _MiniInfoCard(
         label: 'Duration',
         value: duration,
-        color: profile.color,
+        color: _kPurple,
       ),
     ];
 
@@ -787,12 +606,12 @@ class _ScoreCardsRow extends StatelessWidget {
   }
 }
 
-class _MiniScoreCard extends StatelessWidget {
+class _MiniInfoCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
 
-  const _MiniScoreCard({
+  const _MiniInfoCard({
     required this.label,
     required this.value,
     required this.color,
@@ -867,37 +686,44 @@ class _InsightCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: dotColor,
-                        shape: BoxShape.circle,
+          if (items.isEmpty)
+            Text(
+              'No data available.',
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: AppColors.textMuted),
+            )
+          else
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: dotColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.45,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.45,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -908,9 +734,9 @@ class _InsightCard extends StatelessWidget {
 // Communication style card (desktop right panel)
 // ─────────────────────────────────────────────────────────────────────────────
 class _CommunicationCard extends StatelessWidget {
-  final _PersonalityProfile profile;
+  final String communicationStyle;
 
-  const _CommunicationCard({required this.profile});
+  const _CommunicationCard({required this.communicationStyle});
 
   @override
   Widget build(BuildContext context) {
@@ -927,8 +753,8 @@ class _CommunicationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.chat_bubble_outline_rounded,
-                  size: 16, color: profile.color),
+              const Icon(Icons.chat_bubble_outline_rounded,
+                  size: 16, color: _kPurpleLight),
               const SizedBox(width: 8),
               Text(
                 'Communication Style',
@@ -941,7 +767,7 @@ class _CommunicationCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            profile.communicationStyle,
+            communicationStyle,
             style: theme.textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
               height: 1.6,

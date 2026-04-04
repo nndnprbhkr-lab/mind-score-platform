@@ -78,16 +78,11 @@ class ReportsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               ...results.map((r) {
-                final pct =
-                    ((r.score - 1) / 4 * 100).round().clamp(0, 100);
-                Color barColor;
-                if (pct >= 80) {
-                  barColor = AppColors.success;
-                } else if (pct >= 60) {
-                  barColor = AppColors.warning;
-                } else {
-                  barColor = AppColors.error;
-                }
+                final isMpi = r.hasMpiData;
+                final label = isMpi
+                    ? '${r.emoji ?? ''} ${r.typeName ?? ''}'.trim()
+                    : '${((r.score - 1) / 4 * 100).round().clamp(0, 100)}%';
+                final typeCode = r.typeCode ?? '';
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Card(
@@ -108,23 +103,40 @@ class ReportsScreen extends ConsumerWidget {
                                   ),
                                 ),
                               ),
-                              Text(
-                                '$pct%',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: barColor,
-                                  fontWeight: FontWeight.w700,
+                              if (isMpi && typeCode.isNotEmpty)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: AppColors.accent.withValues(alpha: 0.4)),
+                                  ),
+                                  child: Text(
+                                    typeCode,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
+                          const SizedBox(height: 6),
+                          Text(
+                            label,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: 8),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: pct / 100,
-                              backgroundColor: AppColors.cardBorder,
-                              color: barColor,
-                              minHeight: 6,
+                          Text(
+                            r.createdAtUtc.toLocal().toString().split('.').first,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: AppColors.textMuted,
+                              fontSize: 11,
                             ),
                           ),
                         ],

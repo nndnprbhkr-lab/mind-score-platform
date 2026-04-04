@@ -70,7 +70,11 @@ public sealed class ResponseService : IResponseService
             strengths = mpiResult.Strengths,
             growthAreas = mpiResult.GrowthAreas,
             careerPaths = mpiResult.CareerPaths,
+            communicationStyle = mpiResult.CommunicationStyle,
+            workStyle = mpiResult.WorkStyle,
         };
+
+        var camelCase = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
         var result = new Result
         {
@@ -82,7 +86,7 @@ public sealed class ResponseService : IResponseService
             PersonalityName = mpiResult.TypeName,
             PersonalityEmoji = mpiResult.Emoji,
             PersonalityTagline = mpiResult.Tagline,
-            DimensionScoresJson = JsonSerializer.Serialize(mpiResult.Dimensions),
+            DimensionScoresJson = JsonSerializer.Serialize(mpiResult.Dimensions, camelCase),
             InsightsJson = JsonSerializer.Serialize(insightsPayload),
             CreatedAtUtc = DateTime.UtcNow,
         };
