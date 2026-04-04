@@ -201,7 +201,6 @@ class _TabletDesktopLayout extends StatelessWidget {
               child: _TopBarDesktop(
                 auth: auth,
                 ref: ref,
-                showSearch: isDesktop,
               ),
             ),
             Expanded(
@@ -306,12 +305,10 @@ class _TopBarMobile extends StatelessWidget {
 class _TopBarDesktop extends StatelessWidget {
   final AuthState auth;
   final WidgetRef ref;
-  final bool showSearch;
 
   const _TopBarDesktop({
     required this.auth,
     required this.ref,
-    required this.showSearch,
   });
 
   @override
@@ -319,15 +316,13 @@ class _TopBarDesktop extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: showSearch
-              ? _SearchBar()
-              : Text(
-                  'Dashboard',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
+          child: Text(
+            'Dashboard',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
+          ),
         ),
         const SizedBox(width: 16),
         _AvatarMenu(auth: auth, ref: ref),
@@ -336,46 +331,6 @@ class _TopBarDesktop extends StatelessWidget {
   }
 }
 
-class _SearchBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      constraints: const BoxConstraints(maxWidth: 340),
-      decoration: BoxDecoration(
-        color: AppColors.primaryMid,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 12),
-          const Icon(Icons.search_rounded,
-              size: 18, color: AppColors.textSecondary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search tests…',
-                hintStyle: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppColors.textMuted),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _AvatarMenu extends StatelessWidget {
   final AuthState auth;
