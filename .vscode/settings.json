@@ -1,0 +1,12 @@
+{
+  "dart.analysisExcludedFolders": [
+    "flutter"
+  ],
+  "files.exclude": {
+    "flutter": true,
+    "flutter_macos_3.24.5-stable.zip": true
+  },
+  "search.exclude": {
+    "flutter/**": true
+  }
+}
