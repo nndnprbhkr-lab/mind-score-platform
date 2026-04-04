@@ -30,6 +30,7 @@ public sealed class AppDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).IsRequired();
+            entity.HasData(MpiSeed.Test);
         });
 
         modelBuilder.Entity<Question>(entity =>
@@ -39,6 +40,7 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Text).IsRequired();
             entity.HasIndex(x => new { x.TestId, x.Order }).IsUnique();
             entity.HasIndex(x => new { x.TestId, x.Code }).IsUnique();
+            entity.HasData(MpiSeed.Questions);
         });
 
         modelBuilder.Entity<Response>(entity =>
