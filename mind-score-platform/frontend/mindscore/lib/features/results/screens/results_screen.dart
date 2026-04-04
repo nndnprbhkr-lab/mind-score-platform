@@ -10,6 +10,8 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/test/providers/test_provider.dart';
+import '../../../features/results/providers/mpi_result_provider.dart';
+import '../../../widgets/mpi/mpi_legend_header.dart';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const _kPurple = Color(0xFF6B35C8);
@@ -382,6 +384,20 @@ class _MobileLayout extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
+          Consumer(builder: (context, ref, _) {
+            final mpi = ref.watch(mpiResultProvider);
+            return mpi.maybeWhen(
+              data: (r) => r != null
+                  ? Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: MpiLegendHeader(result: r)
+                          .animate()
+                          .fadeIn(duration: 350.ms),
+                    )
+                  : const SizedBox.shrink(),
+              orElse: () => const SizedBox.shrink(),
+            );
+          }),
           _HeroCard(
             profile: profile,
             percent: percent,

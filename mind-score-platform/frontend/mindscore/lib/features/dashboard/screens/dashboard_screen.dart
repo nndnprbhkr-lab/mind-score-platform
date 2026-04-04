@@ -8,6 +8,7 @@ import '../../../core/models/auth_models.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/results/providers/results_provider.dart';
+import '../../../widgets/mpi/mpi_result_card.dart';
 import '../../dashboard/providers/tests_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -86,6 +87,13 @@ class _MobileLayout extends StatelessWidget {
                   resultsState: resultsState,
                   columns: 3,
                 ),
+              ),
+            ),
+            // ── MPI result card (pinned above tests) ──────────────────────
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                child: MpiResultCardSlot(),
               ),
             ),
             SliverToBoxAdapter(
@@ -209,6 +217,8 @@ class _TabletDesktopLayout extends StatelessWidget {
                       _StatsRow(
                           resultsState: resultsState,
                           columns: statsColumns),
+                      const SizedBox(height: 24),
+                      const MpiResultCardSlot(),
                       const SizedBox(height: 36),
                       _SectionTitle('Available Tests'),
                       const SizedBox(height: 16),

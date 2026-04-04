@@ -38,6 +38,13 @@ class ResultModel {
   final String testId;
   final String testName;
   final double score;
+  // MPI enriched fields (null for legacy/non-MPI results)
+  final String? typeCode;
+  final String? typeName;
+  final String? emoji;
+  final String? tagline;
+  final Map<String, dynamic>? dimensionScores;
+  final Map<String, dynamic>? insights;
   final DateTime createdAtUtc;
 
   const ResultModel({
@@ -45,14 +52,28 @@ class ResultModel {
     required this.testId,
     required this.testName,
     required this.score,
+    this.typeCode,
+    this.typeName,
+    this.emoji,
+    this.tagline,
+    this.dimensionScores,
+    this.insights,
     required this.createdAtUtc,
   });
+
+  bool get hasMpiData => typeCode != null && typeCode!.isNotEmpty;
 
   factory ResultModel.fromJson(Map<String, dynamic> j) => ResultModel(
         id: j['id'] as String,
         testId: j['testId'] as String,
         testName: j['testName'] as String,
         score: (j['score'] as num).toDouble(),
+        typeCode: j['typeCode'] as String?,
+        typeName: j['typeName'] as String?,
+        emoji: j['emoji'] as String?,
+        tagline: j['tagline'] as String?,
+        dimensionScores: j['dimensionScores'] as Map<String, dynamic>?,
+        insights: j['insights'] as Map<String, dynamic>?,
         createdAtUtc: DateTime.parse(j['createdAtUtc'] as String),
       );
 }
