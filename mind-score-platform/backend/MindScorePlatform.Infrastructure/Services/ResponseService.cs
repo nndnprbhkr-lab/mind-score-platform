@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MindScorePlatform.Application.DTOs;
 using MindScorePlatform.Application.Interfaces;
 using MindScorePlatform.Domain.Entities;
@@ -10,17 +11,20 @@ public sealed class ResponseService : IResponseService
     private readonly IResultRepository _results;
     private readonly ITestRepository _tests;
     private readonly IQuestionRepository _questions;
+    private readonly IMpiScoringEngine _mpiEngine;
 
     public ResponseService(
         IResponseRepository responses,
         IResultRepository results,
         ITestRepository tests,
-        IQuestionRepository questions)
+        IQuestionRepository questions,
+        IMpiScoringEngine mpiEngine)
     {
         _responses = responses;
         _results = results;
         _tests = tests;
         _questions = questions;
+        _mpiEngine = mpiEngine;
     }
 
     public async Task<ResultDto> SubmitAsync(Guid userId, SubmitResponsesDto dto, CancellationToken cancellationToken)
@@ -33,10 +37,10 @@ public sealed class ResponseService : IResponseService
             throw new InvalidOperationException("You have already submitted this test.");
 
         var questions = await _questions.GetByTestIdAsync(dto.TestId, cancellationToken);
-        var questionIds = questions.Select(q => q.Id).ToHashSet();
+        var questionMap = questions.ToDictionary(q => q.Id);
 
         var responses = dto.Answers
-            .Where(a => questionIds.Contains(a.QuestionId))
+            .Where(a => questionMap.ContainsKey(a.QuestionId))
             .Select(a => new Response
             {
                 Id = Guid.NewGuid(),
@@ -49,36 +53,70 @@ public sealed class ResponseService : IResponseService
 
         await _responses.AddRangeAsync(responses, cancellationToken);
 
-        var score = CalculateScore(responses);
+        // Build scoring engine inputs using question Code for dimension/reversal detection
+        var scoringInputs = dto.Answers
+            .Where(a => questionMap.ContainsKey(a.QuestionId) && int.TryParse(a.Value, out _))
+            .Select(a => new MpiResponseInput
+            {
+                QuestionId = questionMap[a.QuestionId].Code,
+                Value = int.Parse(a.Value),
+            })
+            .ToList();
+
+        var mpiResult = _mpiEngine.Score(scoringInputs);
+
+        var insightsPayload = new
+        {
+            strengths = mpiResult.Strengths,
+            growthAreas = mpiResult.GrowthAreas,
+            careerPaths = mpiResult.CareerPaths,
+        };
 
         var result = new Result
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             TestId = dto.TestId,
-            Score = score,
+            Score = mpiResult.OverallScore,
+            PersonalityType = mpiResult.TypeCode,
+            PersonalityName = mpiResult.TypeName,
+            PersonalityEmoji = mpiResult.Emoji,
+            PersonalityTagline = mpiResult.Tagline,
+            DimensionScoresJson = JsonSerializer.Serialize(mpiResult.Dimensions),
+            InsightsJson = JsonSerializer.Serialize(insightsPayload),
             CreatedAtUtc = DateTime.UtcNow,
         };
+
         await _results.AddAsync(result, cancellationToken);
 
-        return new ResultDto(result.Id, result.UserId, result.TestId, test.Name, result.Score, result.CreatedAtUtc);
+        return ToDto(result, test.Name);
     }
 
-    private static decimal CalculateScore(IReadOnlyList<Response> responses)
+    internal static ResultDto ToDto(Result result, string testName)
     {
-        if (responses.Count == 0) return 0;
+        object? dimensions = null;
+        object? insights = null;
 
-        decimal total = 0;
-        int parsed = 0;
-        foreach (var r in responses)
+        if (!string.IsNullOrEmpty(result.DimensionScoresJson))
+            dimensions = JsonSerializer.Deserialize<object>(result.DimensionScoresJson);
+
+        if (!string.IsNullOrEmpty(result.InsightsJson))
+            insights = JsonSerializer.Deserialize<object>(result.InsightsJson);
+
+        return new ResultDto
         {
-            if (decimal.TryParse(r.Value, out var val))
-            {
-                total += val;
-                parsed++;
-            }
-        }
-
-        return parsed == 0 ? 0 : Math.Round(total / parsed, 2);
+            Id = result.Id,
+            UserId = result.UserId,
+            TestId = result.TestId,
+            TestName = testName,
+            Score = result.Score,
+            TypeCode = result.PersonalityType,
+            TypeName = result.PersonalityName,
+            Emoji = result.PersonalityEmoji,
+            Tagline = result.PersonalityTagline,
+            DimensionScores = dimensions,
+            Insights = insights,
+            CreatedAtUtc = result.CreatedAtUtc,
+        };
     }
 }

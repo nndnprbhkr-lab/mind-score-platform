@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MindScorePlatform.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MindScorePlatform.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260404074035_AddMpiTables")]
+    partial class AddMpiTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,10 +30,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -46,9 +45,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TestId", "Code")
-                        .IsUnique();
 
                     b.HasIndex("TestId", "Order")
                         .IsUnique();
@@ -116,30 +112,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DimensionScoresJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("InsightsJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PersonalityEmoji")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PersonalityName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PersonalityTagline")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PersonalityType")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<decimal>("Score")
                         .HasColumnType("numeric");

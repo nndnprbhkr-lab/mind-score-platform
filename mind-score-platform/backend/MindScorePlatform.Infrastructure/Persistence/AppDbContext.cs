@@ -35,8 +35,10 @@ public sealed class AppDbContext : DbContext
         modelBuilder.Entity<Question>(entity =>
         {
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.Code).IsRequired();
             entity.Property(x => x.Text).IsRequired();
             entity.HasIndex(x => new { x.TestId, x.Order }).IsUnique();
+            entity.HasIndex(x => new { x.TestId, x.Code }).IsUnique();
         });
 
         modelBuilder.Entity<Response>(entity =>
@@ -50,6 +52,12 @@ public sealed class AppDbContext : DbContext
         {
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.UserId, x.TestId }).IsUnique();
+            entity.Property(x => x.PersonalityType).IsRequired();
+            entity.Property(x => x.PersonalityName).IsRequired();
+            entity.Property(x => x.PersonalityEmoji).IsRequired();
+            entity.Property(x => x.PersonalityTagline).IsRequired();
+            entity.Property(x => x.DimensionScoresJson).IsRequired();
+            entity.Property(x => x.InsightsJson).IsRequired();
         });
 
         modelBuilder.Entity<Report>(entity =>

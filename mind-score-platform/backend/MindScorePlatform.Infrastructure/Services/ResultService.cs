@@ -21,7 +21,7 @@ public sealed class ResultService : IResultService
         foreach (var r in results)
         {
             var test = await _tests.GetByIdAsync(r.TestId, cancellationToken);
-            dtos.Add(new ResultDto(r.Id, r.UserId, r.TestId, test?.Name ?? string.Empty, r.Score, r.CreatedAtUtc));
+            dtos.Add(ResponseService.ToDto(r, test?.Name ?? string.Empty));
         }
         return dtos;
     }
@@ -35,6 +35,6 @@ public sealed class ResultService : IResultService
             throw new UnauthorizedAccessException("Access denied.");
 
         var test = await _tests.GetByIdAsync(result.TestId, cancellationToken);
-        return new ResultDto(result.Id, result.UserId, result.TestId, test?.Name ?? string.Empty, result.Score, result.CreatedAtUtc);
+        return ResponseService.ToDto(result, test?.Name ?? string.Empty);
     }
 }

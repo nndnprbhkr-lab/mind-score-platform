@@ -8,6 +8,7 @@ using MindScorePlatform.Application.Interfaces;
 using MindScorePlatform.Infrastructure.Persistence;
 using MindScorePlatform.Infrastructure.Repositories;
 using MindScorePlatform.Infrastructure.Services;
+using MindScorePlatform.Infrastructure.Services.Mpi;
 
 namespace MindScorePlatform.Infrastructure;
 
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IMpiScoringEngine, MpiScoringEngine>();
 
         services.AddScoped<ITestRepository, TestRepository>();
         services.AddScoped<IQuestionRepository, QuestionRepository>();
