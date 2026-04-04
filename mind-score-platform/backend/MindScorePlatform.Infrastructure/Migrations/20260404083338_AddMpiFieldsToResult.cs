@@ -58,21 +58,11 @@ namespace MindScorePlatform.Infrastructure.Migrations
                 type: "text",
                 nullable: false,
                 defaultValue: "");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Questions_TestId_Code",
-                table: "Questions",
-                columns: new[] { "TestId", "Code" },
-                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Questions_TestId_Code",
-                table: "Questions");
-
             migrationBuilder.DropColumn(
                 name: "DimensionScoresJson",
                 table: "Results");

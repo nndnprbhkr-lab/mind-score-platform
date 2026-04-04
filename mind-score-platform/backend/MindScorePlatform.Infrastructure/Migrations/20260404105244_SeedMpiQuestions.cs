@@ -13,6 +13,10 @@ namespace MindScorePlatform.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Clean up any stale questions from previous failed migration attempts
+            migrationBuilder.Sql("DELETE FROM \"Questions\";");
+            migrationBuilder.Sql("DELETE FROM \"Tests\" WHERE \"Id\" = '00000000-0000-0000-0000-000000000001';");
+
             migrationBuilder.InsertData(
                 table: "Tests",
                 columns: new[] { "Id", "CreatedAtUtc", "Name" },
@@ -44,11 +48,21 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     { new Guid("00000000-0000-0000-0001-000000000019"), "JP_04_R", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 19, new Guid("00000000-0000-0000-0000-000000000001"), "I often decide things at the last moment and feel perfectly comfortable doing so." },
                     { new Guid("00000000-0000-0000-0001-000000000020"), "JP_05", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), 20, new Guid("00000000-0000-0000-0000-000000000001"), "I prefer to have things resolved and settled rather than leaving them open-ended." }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Questions_TestId_Code",
+                table: "Questions",
+                columns: new[] { "TestId", "Code" },
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_Questions_TestId_Code",
+                table: "Questions");
+
             migrationBuilder.DeleteData(
                 table: "Questions",
                 keyColumn: "Id",
