@@ -489,6 +489,10 @@ class _StatsRow extends ConsumerWidget {
     final mpiAsync = ref.watch(mpiResultProvider);
     final mpi = mpiAsync.valueOrNull;
 
+    final personalityValue = mpi != null && mpi.typeCode.isNotEmpty
+        ? '${mpi.emoji} ${mpi.typeCode}'
+        : '—';
+
     final stats = [
       _StatData(
         emoji: '🧪',
@@ -496,13 +500,8 @@ class _StatsRow extends ConsumerWidget {
         label: 'Tests Taken',
       ),
       _StatData(
-        emoji: '🏆',
-        value: mpi != null ? (mpi.typeCode.isNotEmpty ? mpi.typeCode : '—') : '—',
-        label: 'Type Code',
-      ),
-      _StatData(
         emoji: '🧠',
-        value: mpi != null ? mpi.emoji : '—',
+        value: personalityValue,
         label: 'Personality',
       ),
       if (columns == 4)
