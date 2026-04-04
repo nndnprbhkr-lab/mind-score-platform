@@ -40,7 +40,6 @@ dependencies:
   flutter_animate: ^4.5.0
   google_fonts: ^6.2.1
   url_launcher: ^6.3.0
-  screenshot: ^2.1.0
   share_plus: ^7.2.1
   path_provider: ^2.1.2
 

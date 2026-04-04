@@ -1,7 +1,9 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/models/mpi_models.dart';
 import 'mpi_shareable_card.dart';
@@ -37,7 +39,6 @@ class _MpiShareModal extends StatefulWidget {
 
 class _MpiShareModalState extends State<_MpiShareModal> {
   ShareFormat _format = ShareFormat.square;
-  final _screenshotController = ScreenshotController();
   final _repaintKey = GlobalKey();
   bool _isCopied = false;
   String? _capturingPlatform; // tracks which button is capturing
@@ -46,7 +47,12 @@ class _MpiShareModalState extends State<_MpiShareModal> {
 
   Future<Uint8List?> _captureCard() async {
     try {
-      return await _screenshotController.capture(pixelRatio: 3.0);
+      final boundary = _repaintKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
     } catch (_) {
       return null;
     }
@@ -200,8 +206,8 @@ class _MpiShareModalState extends State<_MpiShareModal> {
               child: Container(
                 color: _kDeep,
                 padding: const EdgeInsets.all(12),
-                child: Screenshot(
-                  controller: _screenshotController,
+                child: RepaintBoundary(
+                  key: _repaintKey,
                   child: MpiShareableCard(
                     result: widget.result,
                     format: _format,
