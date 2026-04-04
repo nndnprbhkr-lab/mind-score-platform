@@ -585,7 +585,7 @@ class _FeaturedTestCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${test.questionCount} questions · ~${test.questionCount} min',
+            '${test.questionCount} questions · 3–5 min',
             style: theme.textTheme.bodySmall?.copyWith(
               color: Colors.white.withValues(alpha: 0.75),
             ),
@@ -669,7 +669,7 @@ class _RegularTestCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${test.questionCount} questions · ~${test.questionCount} min',
+                  '${test.questionCount} questions · 3–5 min',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -810,7 +810,7 @@ class _GridTestCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${test.questionCount} questions · ~${test.questionCount} min',
+            '${test.questionCount} questions · 3–5 min',
             style: theme.textTheme.bodySmall?.copyWith(
               color: isFeatured
                   ? Colors.white.withValues(alpha: 0.72)
