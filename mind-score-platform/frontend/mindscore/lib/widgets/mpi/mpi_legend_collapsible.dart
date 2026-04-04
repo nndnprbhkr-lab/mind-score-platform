@@ -68,18 +68,19 @@ class _Content extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          // 2×2 grid of legend tiles
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            childAspectRatio: 2.4,
-            children: MpiDimensionMeta.all
-                .map((m) => _LegendTile(meta: m))
-                .toList(),
-          ),
+          LayoutBuilder(builder: (context, constraints) {
+            const spacing = 6.0;
+            final cols = constraints.maxWidth >= 380 ? 4 : 2;
+            final tileW =
+                (constraints.maxWidth - spacing * (cols - 1)) / cols;
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: MpiDimensionMeta.all
+                  .map((m) => SizedBox(width: tileW, child: _LegendTile(meta: m)))
+                  .toList(),
+            );
+          }),
 
           const SizedBox(height: 10),
           Container(
