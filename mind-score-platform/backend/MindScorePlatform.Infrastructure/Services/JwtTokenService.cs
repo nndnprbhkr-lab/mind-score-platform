@@ -30,7 +30,9 @@ public sealed class JwtTokenService : IJwtTokenService
         {
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Name, user.Name),
             new(ClaimTypes.Role, user.Role),
+            new("is_guest", user.IsGuest.ToString().ToLower()),
         };
 
         var token = new JwtSecurityToken(

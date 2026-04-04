@@ -8,8 +8,9 @@ class ApiConstants {
 
   static String get baseUrl => _isProduction ? _prodBaseUrl : _devBaseUrl;
 
-  static String get register => '$baseUrl/api/auth/register';
-  static String get login    => '$baseUrl/api/auth/login';
+  static String get register   => '$baseUrl/api/auth/register';
+  static String get login      => '$baseUrl/api/auth/login';
+  static String get guestLogin => '$baseUrl/api/auth/guest';
 
   static String get tests     => '$baseUrl/api/tests';
   static String get questions => '$baseUrl/api/questions';

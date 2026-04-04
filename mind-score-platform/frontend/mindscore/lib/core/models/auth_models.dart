@@ -88,33 +88,48 @@ class LoginRequest {
 }
 
 class RegisterRequest {
+  final String name;
   final String email;
   final String password;
 
-  const RegisterRequest({required this.email, required this.password});
+  const RegisterRequest({required this.name, required this.email, required this.password});
 
-  Map<String, dynamic> toJson() => {'email': email, 'password': password};
+  Map<String, dynamic> toJson() => {'name': name, 'email': email, 'password': password};
+}
+
+class GuestLoginRequest {
+  final String name;
+
+  const GuestLoginRequest({required this.name});
+
+  Map<String, dynamic> toJson() => {'name': name};
 }
 
 class AuthResponse {
   final String userId;
+  final String name;
   final String email;
   final String token;
   final bool isAdmin;
+  final bool isGuest;
 
   const AuthResponse({
     required this.userId,
+    required this.name,
     required this.email,
     required this.token,
     this.isAdmin = false,
+    this.isGuest = false,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
       userId: json['userId'] as String,
+      name: json['name'] as String? ?? '',
       email: json['email'] as String,
       token: json['accessToken'] as String,
       isAdmin: json['isAdmin'] as bool? ?? false,
+      isGuest: json['isGuest'] as bool? ?? false,
     );
   }
 }

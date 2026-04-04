@@ -26,6 +26,7 @@ public sealed class AuthService : IAuthService
         var user = new User
         {
             Id = Guid.NewGuid(),
+            Name = request.Name,
             Email = request.Email,
             PasswordHash = PasswordHasher.Hash(request.Password),
             CreatedAtUtc = DateTime.UtcNow,
@@ -34,7 +35,7 @@ public sealed class AuthService : IAuthService
         await _users.AddAsync(user, cancellationToken);
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Email, token, user.Role == "admin");
+        return new AuthResponseDto(user.Id, user.Name, user.Email, token, user.Role == "admin", user.IsGuest);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
@@ -51,6 +52,25 @@ public sealed class AuthService : IAuthService
         }
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Email, token, user.Role == "admin");
+        return new AuthResponseDto(user.Id, user.Name, user.Email, token, user.Role == "admin", user.IsGuest);
+    }
+
+    public async Task<AuthResponseDto> GuestLoginAsync(GuestLoginRequestDto request, CancellationToken cancellationToken)
+    {
+        var guestId = Guid.NewGuid();
+        var user = new User
+        {
+            Id = guestId,
+            Name = request.Name,
+            Email = $"guest_{guestId}@guest.local",
+            PasswordHash = PasswordHasher.Hash(Guid.NewGuid().ToString()),
+            IsGuest = true,
+            CreatedAtUtc = DateTime.UtcNow,
+        };
+
+        await _users.AddAsync(user, cancellationToken);
+
+        var token = _jwtTokenService.CreateToken(user);
+        return new AuthResponseDto(user.Id, user.Name, user.Email, token, false, true);
     }
 }

@@ -7,7 +7,9 @@ import '../../../core/services/token_storage.dart';
 class AuthState {
   final bool isAuthenticated;
   final bool isAdmin;
+  final bool isGuest;
   final String? userId;
+  final String? name;
   final String? email;
   final String? token;
   final bool isLoading;
@@ -16,7 +18,9 @@ class AuthState {
   const AuthState({
     this.isAuthenticated = false,
     this.isAdmin = false,
+    this.isGuest = false,
     this.userId,
+    this.name,
     this.email,
     this.token,
     this.isLoading = false,
@@ -26,7 +30,9 @@ class AuthState {
   AuthState copyWith({
     bool? isAuthenticated,
     bool? isAdmin,
+    bool? isGuest,
     String? userId,
+    String? name,
     String? email,
     String? token,
     bool? isLoading,
@@ -35,7 +41,9 @@ class AuthState {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isAdmin: isAdmin ?? this.isAdmin,
+      isGuest: isGuest ?? this.isGuest,
       userId: userId ?? this.userId,
+      name: name ?? this.name,
       email: email ?? this.email,
       token: token ?? this.token,
       isLoading: isLoading ?? this.isLoading,
@@ -55,7 +63,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(
         isAuthenticated: true,
         isAdmin: saved.isAdmin,
+        isGuest: saved.isGuest,
         userId: saved.userId,
+        name: saved.name,
         email: saved.email,
         token: saved.token,
       );
@@ -66,7 +76,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthState(
       isAuthenticated: true,
       isAdmin: response.isAdmin,
+      isGuest: response.isGuest,
       userId: response.userId,
+      name: response.name,
       email: response.email,
       token: response.token,
     );
@@ -83,8 +95,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await TokenStorage.save(
         token: response.token,
         userId: response.userId,
+        name: response.name,
         email: response.email,
         isAdmin: response.isAdmin,
+        isGuest: response.isGuest,
       );
       _applyResponse(response);
     } on ApiException catch (e) {
@@ -94,19 +108,45 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String email, String password) async {
+  Future<void> register(String name, String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final json = await ApiClient.post(
         ApiConstants.register,
-        RegisterRequest(email: email, password: password).toJson(),
+        RegisterRequest(name: name, email: email, password: password).toJson(),
       );
       final response = AuthResponse.fromJson(json);
       await TokenStorage.save(
         token: response.token,
         userId: response.userId,
+        name: response.name,
         email: response.email,
         isAdmin: response.isAdmin,
+        isGuest: response.isGuest,
+      );
+      _applyResponse(response);
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: 'Unexpected error. Try again.');
+    }
+  }
+
+  Future<void> guestLogin(String name) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final json = await ApiClient.post(
+        ApiConstants.guestLogin,
+        GuestLoginRequest(name: name).toJson(),
+      );
+      final response = AuthResponse.fromJson(json);
+      await TokenStorage.save(
+        token: response.token,
+        userId: response.userId,
+        name: response.name,
+        email: response.email,
+        isAdmin: response.isAdmin,
+        isGuest: response.isGuest,
       );
       _applyResponse(response);
     } on ApiException catch (e) {

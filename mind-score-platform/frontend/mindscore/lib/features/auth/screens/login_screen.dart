@@ -43,6 +43,79 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  Future<void> _onGuestTap() async {
+    final nameCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E0F3C),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Continue as Guest',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your name to get started.',
+              style: TextStyle(color: Color(0xFF9a85c8), fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameCtrl,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Your name',
+                hintStyle: const TextStyle(color: Color(0xFF6B5A9E)),
+                filled: true,
+                fillColor: const Color(0xFF2A1850),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFF3D2070)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFF3D2070)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFF6B35C8)),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel',
+                style: TextStyle(color: Color(0xFF9a85c8))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6B35C8),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    nameCtrl.dispose();
+
+    if (confirmed == true && nameCtrl.text.trim().isNotEmpty) {
+      if (!mounted) return;
+      await ref.read(authProvider.notifier).guestLogin(nameCtrl.text.trim());
+    }
+  }
+
   void _onForgotPassword() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -227,6 +300,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               .animate(delay: 340.ms)
               .fadeIn(duration: 300.ms),
 
+          const SizedBox(height: 12),
+
+          _GuestButton(onTap: auth.isLoading ? null : _onGuestTap)
+              .animate(delay: 360.ms)
+              .fadeIn(duration: 300.ms),
+
           const SizedBox(height: 32),
 
           // Footer nav
@@ -252,6 +331,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ],
           ).animate(delay: 380.ms).fadeIn(duration: 300.ms),
         ],
+      ),
+    );
+  }
+}
+
+class _GuestButton extends StatelessWidget {
+  final VoidCallback? onTap;
+  const _GuestButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFF3D2070)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.person_outline_rounded,
+                size: 20, color: Color(0xFF9a85c8)),
+            SizedBox(width: 10),
+            Text(
+              'Continue as Guest',
+              style: TextStyle(
+                color: Color(0xFF9a85c8),
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

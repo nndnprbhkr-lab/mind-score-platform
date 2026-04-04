@@ -28,4 +28,11 @@ public sealed class AuthController : ControllerBase
         var result = await _auth.LoginAsync(request, cancellationToken);
         return Ok(result);
     }
+
+    [HttpPost("guest")]
+    public async Task<ActionResult<AuthResponseDto>> GuestLogin([FromBody] GuestLoginRequestDto request, CancellationToken cancellationToken)
+    {
+        var result = await _auth.GuestLoginAsync(request, cancellationToken);
+        return Ok(result);
+    }
 }
