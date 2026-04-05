@@ -12,21 +12,25 @@ public static class MindScoreSeed
 {
     internal static readonly Guid TestId = new("a1000000-0000-0000-0000-000000000001");
 
-    /// <summary>Module display names (must match Supabase rows exactly).</summary>
-    private static readonly string[] ModuleNames =
+    /// <summary>Module definitions — deterministic GUIDs so re-seeding is safe.</summary>
+    private static readonly (Guid id, string name, int order)[] ModuleDefs =
     [
-        "Cognitive", "Emotional", "Focus", "Decision", "Resilience"
+        (new Guid("b1000000-0000-0000-0000-000000000001"), "Cognitive",  1),
+        (new Guid("b1000000-0000-0000-0000-000000000002"), "Emotional",  2),
+        (new Guid("b1000000-0000-0000-0000-000000000003"), "Focus",      3),
+        (new Guid("b1000000-0000-0000-0000-000000000004"), "Decision",   4),
+        (new Guid("b1000000-0000-0000-0000-000000000005"), "Resilience", 5),
     ];
 
-    /// <summary>Age band names (must match Supabase rows exactly).</summary>
-    private static readonly string[] AgeBandNames =
+    /// <summary>Age band definitions — deterministic GUIDs so re-seeding is safe.</summary>
+    private static readonly (Guid id, string name, int min, int max, int order)[] AgeBandDefs =
     [
-        "Child (6-12)",
-        "Teen (13-17)",
-        "Young Adult (18-24)",
-        "Adult (25-44)",
-        "Mature Adult (45-59)",
-        "Senior Adult (60+)",
+        (new Guid("c1000000-0000-0000-0000-000000000001"), "Child (6-12)",          6,  12, 1),
+        (new Guid("c1000000-0000-0000-0000-000000000002"), "Teen (13-17)",          13, 17, 2),
+        (new Guid("c1000000-0000-0000-0000-000000000003"), "Young Adult (18-24)",   18, 24, 3),
+        (new Guid("c1000000-0000-0000-0000-000000000004"), "Adult (25-44)",         25, 44, 4),
+        (new Guid("c1000000-0000-0000-0000-000000000005"), "Mature Adult (45-59)",  45, 59, 5),
+        (new Guid("c1000000-0000-0000-0000-000000000006"), "Senior Adult (60+)",    60, 99, 6),
     ];
 
     // ── Per-module questions (6 per module, all neutral to age band) ──────────
@@ -96,7 +100,31 @@ public static class MindScoreSeed
 
     public static async Task SeedAsync(AppDbContext db)
     {
-        // Ensure the MindScore test row exists
+        var now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // ── Seed modules if missing ───────────────────────────────────────────
+        var existingModuleIds = await db.Modules.Select(m => m.Id).ToListAsync();
+        foreach (var (id, name, order) in ModuleDefs)
+        {
+            if (!existingModuleIds.Contains(id))
+            {
+                db.Modules.Add(new Module { Id = id, Name = name, DisplayOrder = order, IsActive = true, CreatedAt = now });
+            }
+        }
+        await db.SaveChangesAsync();
+
+        // ── Seed age bands if missing ─────────────────────────────────────────
+        var existingAgeBandIds = await db.AgeBands.Select(a => a.Id).ToListAsync();
+        foreach (var (id, name, min, max, order) in AgeBandDefs)
+        {
+            if (!existingAgeBandIds.Contains(id))
+            {
+                db.AgeBands.Add(new AgeBand { Id = id, Name = name, MinAge = min, MaxAge = max, DisplayOrder = order, IsActive = true, CreatedAt = now });
+            }
+        }
+        await db.SaveChangesAsync();
+
+        // ── Ensure the MindScore test row exists ──────────────────────────────
         var testExists = await db.Tests.AnyAsync(t => t.Id == TestId);
         if (!testExists)
         {
@@ -104,7 +132,7 @@ public static class MindScoreSeed
             {
                 Id = TestId,
                 Name = "MindScore Assessment",
-                CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                CreatedAtUtc = now,
             });
             await db.SaveChangesAsync();
         }
@@ -113,26 +141,10 @@ public static class MindScoreSeed
         var alreadySeeded = await db.Questions.AnyAsync(q => q.TestId == TestId);
         if (alreadySeeded) return;
 
-        // Look up modules and age bands by name
-        var modules = await db.Modules
-            .Where(m => ModuleNames.Contains(m.Name))
-            .ToDictionaryAsync(m => m.Name, m => m.Id);
+        // Build lookup maps from the deterministic IDs
+        var modules = ModuleDefs.ToDictionary(m => m.name, m => m.id);
+        var ageBandList = AgeBandDefs.Select(a => (a.id, a.order)).ToList();
 
-        var ageBands = await db.AgeBands
-            .Where(a => AgeBandNames.Contains(a.Name))
-            .OrderBy(a => a.DisplayOrder)
-            .ToListAsync();
-
-        if (modules.Count < ModuleNames.Length || ageBands.Count < AgeBandNames.Length)
-        {
-            throw new InvalidOperationException(
-                "MindScore seed: modules or age bands not found in database. " +
-                "Ensure Supabase has been seeded with the required rows.");
-        }
-
-        var ageBandList = AgeBandNames.Select(n => ageBands.First(a => a.Name == n)).ToList();
-
-        var now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var questions = new List<Question>();
         var normRefs = new List<NormReference>();
         var weights = new List<AgeBandModuleWeight>();
@@ -164,11 +176,11 @@ public static class MindScoreSeed
                     {
                         Id = Guid.NewGuid(),
                         TestId = TestId,
-                        Code = $"{code}_AB{ab.DisplayOrder}",
+                        Code = $"{code}_AB{ab.order}",
                         Order = globalOrder++,
                         Text = text,
                         ModuleId = moduleId,
-                        AgeBandId = ab.Id,
+                        AgeBandId = ab.id,
                         IsReverseScored = reverse,
                         Weight = 1.0m,
                         Version = 1,
@@ -184,7 +196,7 @@ public static class MindScoreSeed
                 {
                     Id = Guid.NewGuid(),
                     ModuleId = moduleId,
-                    AgeBandId = ab.Id,
+                    AgeBandId = ab.id,
                     Mean = 50.0,
                     StandardDeviation = 15.0,
                     SampleSize = 100,
@@ -198,7 +210,7 @@ public static class MindScoreSeed
                 weights.Add(new AgeBandModuleWeight
                 {
                     Id = Guid.NewGuid(),
-                    AgeBandId = ageBandList[abi].Id,
+                    AgeBandId = ageBandList[abi].id,
                     ModuleId = moduleId,
                     Weight = WeightsByAgeBand[abi][mi],
                     CreatedAt = now,
