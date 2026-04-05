@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using MindScorePlatform.Application.Interfaces;
+using Microsoft.EntityFrameworkCore.Migrations;
 using MindScorePlatform.Infrastructure.Persistence;
 using MindScorePlatform.Infrastructure.Repositories;
 using MindScorePlatform.Infrastructure.Services;
@@ -24,7 +25,10 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
-                npgsqlOptions.MigrationsAssembly(typeof(DependencyInjection).Assembly.FullName)));
+                npgsqlOptions
+                    .MigrationsAssembly(typeof(DependencyInjection).Assembly.FullName)
+                    .MigrationsHistoryTable("__efmigrationshistory"))
+                   .ReplaceService<IHistoryRepository, LowercaseHistoryRepository>());
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthService, AuthService>();
