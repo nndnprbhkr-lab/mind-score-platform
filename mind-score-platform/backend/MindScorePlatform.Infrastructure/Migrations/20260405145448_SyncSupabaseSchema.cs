@@ -11,153 +11,76 @@ namespace MindScorePlatform.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // ── Users: new profile columns ────────────────────────────────────
-            migrationBuilder.AddColumn<Guid>(
-                name: "agebandid",
-                table: "users",
-                type: "uuid",
-                nullable: true);
+            // ── Users: new profile columns (IF NOT EXISTS — Supabase may already have them) ──
+            migrationBuilder.Sql("ALTER TABLE users ADD COLUMN IF NOT EXISTS agebandid uuid;");
+            migrationBuilder.Sql("ALTER TABLE users ADD COLUMN IF NOT EXISTS dateofbirth timestamp with time zone;");
+            migrationBuilder.Sql("ALTER TABLE users ADD COLUMN IF NOT EXISTS domicile text;");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "dateofbirth",
-                table: "users",
-                type: "timestamp with time zone",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "domicile",
-                table: "users",
-                type: "text",
-                nullable: true);
-
-            // ── Questions: MindScore module/age-band columns ──────────────────
-            migrationBuilder.AddColumn<Guid>(
-                name: "agebandid",
-                table: "questions",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "difficulty",
-                table: "questions",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<bool>(
-                name: "isreversescored",
-                table: "questions",
-                type: "boolean",
-                nullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "moduleid",
-                table: "questions",
-                type: "uuid",
-                nullable: true);
-
-            migrationBuilder.AddColumn<int>(
-                name: "version",
-                table: "questions",
-                type: "integer",
-                nullable: true);
-
-            migrationBuilder.AddColumn<decimal>(
-                name: "weight",
-                table: "questions",
-                type: "numeric",
-                nullable: true);
+            // ── Questions: MindScore module/age-band columns (IF NOT EXISTS) ──
+            migrationBuilder.Sql("ALTER TABLE questions ADD COLUMN IF NOT EXISTS agebandid uuid;");
+            migrationBuilder.Sql("ALTER TABLE questions ADD COLUMN IF NOT EXISTS difficulty text;");
+            migrationBuilder.Sql("ALTER TABLE questions ADD COLUMN IF NOT EXISTS isreversescored boolean;");
+            migrationBuilder.Sql("ALTER TABLE questions ADD COLUMN IF NOT EXISTS moduleid uuid;");
+            migrationBuilder.Sql("ALTER TABLE questions ADD COLUMN IF NOT EXISTS version integer;");
+            migrationBuilder.Sql("ALTER TABLE questions ADD COLUMN IF NOT EXISTS weight numeric;");
 
             // ── Tests: rename to MindType Assessment ─────────────────────────
-            migrationBuilder.UpdateData(
-                table: "tests",
-                keyColumn: "Id",
-                keyValue: new Guid("00000000-0000-0000-0000-000000000001"),
-                column: "Name",
-                value: "MindType Assessment");
+            migrationBuilder.Sql("UPDATE tests SET name = 'MindType Assessment' WHERE id = '00000000-0000-0000-0000-000000000001';");
 
-            // ── Indexes on new FK columns ─────────────────────────────────────
-            migrationBuilder.CreateIndex(
-                name: "IX_users_agebandid",
-                table: "users",
-                column: "agebandid");
+            // ── Indexes on new FK columns (IF NOT EXISTS) ─────────────────────
+            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS \"IX_users_agebandid\" ON users (agebandid);");
+            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS \"IX_Questions_agebandid\" ON questions (agebandid);");
+            migrationBuilder.Sql("CREATE INDEX IF NOT EXISTS \"IX_Questions_moduleid\" ON questions (moduleid);");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_questions_agebandid",
-                table: "questions",
-                column: "agebandid");
+            // ── FKs to pre-existing agebands / modules tables (skip if exists) ─
+            migrationBuilder.Sql(@"
+                DO $$ BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_questions_agebands_agebandid') THEN
+                        ALTER TABLE questions ADD CONSTRAINT ""FK_questions_agebands_agebandid""
+                            FOREIGN KEY (agebandid) REFERENCES agebands(id);
+                    END IF;
+                END $$;");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_questions_moduleid",
-                table: "questions",
-                column: "moduleid");
+            migrationBuilder.Sql(@"
+                DO $$ BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_questions_modules_moduleid') THEN
+                        ALTER TABLE questions ADD CONSTRAINT ""FK_questions_modules_moduleid""
+                            FOREIGN KEY (moduleid) REFERENCES modules(id);
+                    END IF;
+                END $$;");
 
-            // ── FKs to pre-existing agebands / modules tables ─────────────────
-            migrationBuilder.AddForeignKey(
-                name: "FK_questions_agebands_agebandid",
-                table: "questions",
-                column: "agebandid",
-                principalTable: "agebands",
-                principalColumn: "id");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_questions_modules_moduleid",
-                table: "questions",
-                column: "moduleid",
-                principalTable: "modules",
-                principalColumn: "id");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_users_agebands_agebandid",
-                table: "users",
-                column: "agebandid",
-                principalTable: "agebands",
-                principalColumn: "id");
+            migrationBuilder.Sql(@"
+                DO $$ BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_users_agebands_agebandid') THEN
+                        ALTER TABLE users ADD CONSTRAINT ""FK_users_agebands_agebandid""
+                            FOREIGN KEY (agebandid) REFERENCES agebands(id);
+                    END IF;
+                END $$;");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_questions_agebands_agebandid",
-                table: "questions");
+            migrationBuilder.Sql(@"ALTER TABLE questions DROP CONSTRAINT IF EXISTS ""FK_questions_agebands_agebandid"";");
+            migrationBuilder.Sql(@"ALTER TABLE questions DROP CONSTRAINT IF EXISTS ""FK_questions_modules_moduleid"";");
+            migrationBuilder.Sql(@"ALTER TABLE users DROP CONSTRAINT IF EXISTS ""FK_users_agebands_agebandid"";");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_questions_modules_moduleid",
-                table: "questions");
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_users_agebandid"";");
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_Questions_agebandid"";");
+            migrationBuilder.Sql(@"DROP INDEX IF EXISTS ""IX_Questions_moduleid"";");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_users_agebands_agebandid",
-                table: "users");
+            migrationBuilder.Sql("ALTER TABLE users DROP COLUMN IF EXISTS agebandid;");
+            migrationBuilder.Sql("ALTER TABLE users DROP COLUMN IF EXISTS dateofbirth;");
+            migrationBuilder.Sql("ALTER TABLE users DROP COLUMN IF EXISTS domicile;");
 
-            migrationBuilder.DropIndex(
-                name: "IX_users_agebandid",
-                table: "users");
+            migrationBuilder.Sql("ALTER TABLE questions DROP COLUMN IF EXISTS agebandid;");
+            migrationBuilder.Sql("ALTER TABLE questions DROP COLUMN IF EXISTS difficulty;");
+            migrationBuilder.Sql("ALTER TABLE questions DROP COLUMN IF EXISTS isreversescored;");
+            migrationBuilder.Sql("ALTER TABLE questions DROP COLUMN IF EXISTS moduleid;");
+            migrationBuilder.Sql("ALTER TABLE questions DROP COLUMN IF EXISTS version;");
+            migrationBuilder.Sql("ALTER TABLE questions DROP COLUMN IF EXISTS weight;");
 
-            migrationBuilder.DropIndex(
-                name: "IX_questions_agebandid",
-                table: "questions");
-
-            migrationBuilder.DropIndex(
-                name: "IX_questions_moduleid",
-                table: "questions");
-
-            migrationBuilder.DropColumn(name: "agebandid",      table: "users");
-            migrationBuilder.DropColumn(name: "dateofbirth",    table: "users");
-            migrationBuilder.DropColumn(name: "domicile",       table: "users");
-
-            migrationBuilder.DropColumn(name: "agebandid",      table: "questions");
-            migrationBuilder.DropColumn(name: "difficulty",     table: "questions");
-            migrationBuilder.DropColumn(name: "isreversescored",table: "questions");
-            migrationBuilder.DropColumn(name: "moduleid",       table: "questions");
-            migrationBuilder.DropColumn(name: "version",        table: "questions");
-            migrationBuilder.DropColumn(name: "weight",         table: "questions");
-
-            migrationBuilder.UpdateData(
-                table: "tests",
-                keyColumn: "Id",
-                keyValue: new Guid("00000000-0000-0000-0000-000000000001"),
-                column: "Name",
-                value: "MPI Assessment");
+            migrationBuilder.Sql("UPDATE tests SET name = 'MPI Assessment' WHERE id = '00000000-0000-0000-0000-000000000001';");
         }
     }
 }

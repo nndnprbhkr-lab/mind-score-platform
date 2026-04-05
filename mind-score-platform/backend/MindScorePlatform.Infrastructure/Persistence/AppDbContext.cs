@@ -27,13 +27,17 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("users");
             entity.HasKey(x => x.Id);
-            entity.HasIndex(x => x.Email).IsUnique();
-            entity.Property(x => x.Name).IsRequired();
-            entity.Property(x => x.Email).IsRequired();
-            entity.Property(x => x.PasswordHash).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).IsRequired().HasColumnName("name");
+            entity.Property(x => x.Email).IsRequired().HasColumnName("email");
+            entity.Property(x => x.PasswordHash).IsRequired().HasColumnName("passwordhash");
+            entity.Property(x => x.Role).HasColumnName("role");
+            entity.Property(x => x.IsGuest).HasColumnName("isguest");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
             entity.Property(x => x.DateOfBirth).HasColumnName("dateofbirth");
             entity.Property(x => x.Domicile).HasColumnName("domicile");
             entity.Property(x => x.AgeBandId).HasColumnName("agebandid");
+            entity.HasIndex(x => x.Email).IsUnique().HasDatabaseName("IX_Users_Email");
             entity.HasOne(x => x.AgeBand).WithMany().HasForeignKey(x => x.AgeBandId).IsRequired(false);
         });
 
@@ -41,7 +45,9 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("tests");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).IsRequired().HasColumnName("name");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
             entity.HasData(MpiSeed.Test);
         });
 
@@ -49,16 +55,20 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("questions");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Code).IsRequired();
-            entity.Property(x => x.Text).IsRequired();
-            entity.HasIndex(x => new { x.TestId, x.Order }).IsUnique();
-            entity.HasIndex(x => new { x.TestId, x.Code }).IsUnique();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TestId).HasColumnName("testid");
+            entity.Property(x => x.Code).IsRequired().HasColumnName("code");
+            entity.Property(x => x.Text).IsRequired().HasColumnName("text");
+            entity.Property(x => x.Order).HasColumnName("orderid");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
             entity.Property(x => x.ModuleId).HasColumnName("moduleid");
             entity.Property(x => x.AgeBandId).HasColumnName("agebandid");
             entity.Property(x => x.Difficulty).HasColumnName("difficulty");
             entity.Property(x => x.Weight).HasColumnName("weight");
             entity.Property(x => x.IsReverseScored).HasColumnName("isreversescored");
             entity.Property(x => x.Version).HasColumnName("version");
+            entity.HasIndex(x => new { x.TestId, x.Order }).IsUnique().HasDatabaseName("IX_Questions_TestId_Order");
+            entity.HasIndex(x => new { x.TestId, x.Code }).IsUnique().HasDatabaseName("IX_Questions_TestId_Code");
             entity.HasOne(x => x.Module)
                   .WithMany(m => m.Questions)
                   .HasForeignKey(x => x.ModuleId)
@@ -74,29 +84,41 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("responses");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Value).IsRequired();
-            entity.HasIndex(x => new { x.UserId, x.QuestionId }).IsUnique();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.UserId).HasColumnName("userid");
+            entity.Property(x => x.QuestionId).HasColumnName("questionid");
+            entity.Property(x => x.Value).IsRequired().HasColumnName("value");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
+            entity.HasIndex(x => new { x.UserId, x.QuestionId }).IsUnique().HasDatabaseName("IX_Responses_UserId_QuestionId");
         });
 
         modelBuilder.Entity<Result>(entity =>
         {
             entity.ToTable("results");
             entity.HasKey(x => x.Id);
-            entity.HasIndex(x => new { x.UserId, x.TestId }).IsUnique();
-            entity.Property(x => x.PersonalityType).IsRequired();
-            entity.Property(x => x.PersonalityName).IsRequired();
-            entity.Property(x => x.PersonalityEmoji).IsRequired();
-            entity.Property(x => x.PersonalityTagline).IsRequired();
-            entity.Property(x => x.DimensionScoresJson).IsRequired();
-            entity.Property(x => x.InsightsJson).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.UserId).HasColumnName("userid");
+            entity.Property(x => x.TestId).HasColumnName("testid");
+            entity.Property(x => x.Score).HasColumnName("score");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
+            entity.Property(x => x.PersonalityType).IsRequired().HasColumnName("personalitytype");
+            entity.Property(x => x.PersonalityName).IsRequired().HasColumnName("personalityname");
+            entity.Property(x => x.PersonalityEmoji).IsRequired().HasColumnName("personalityemoji");
+            entity.Property(x => x.PersonalityTagline).IsRequired().HasColumnName("personalitytagline");
+            entity.Property(x => x.DimensionScoresJson).IsRequired().HasColumnName("dimensionscoresjson");
+            entity.Property(x => x.InsightsJson).IsRequired().HasColumnName("insightsjson");
+            entity.HasIndex(x => new { x.UserId, x.TestId }).IsUnique().HasDatabaseName("IX_Results_UserId_TestId");
         });
 
         modelBuilder.Entity<Report>(entity =>
         {
             entity.ToTable("reports");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Title).IsRequired();
-            entity.Property(x => x.Content).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.UserId).HasColumnName("userid");
+            entity.Property(x => x.Title).IsRequired().HasColumnName("title");
+            entity.Property(x => x.Content).IsRequired().HasColumnName("content");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
         });
 
         modelBuilder.Entity<AgeBand>(entity =>
