@@ -149,7 +149,7 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<ModuleScore>(entity =>
         {
-            entity.ToTable("module_scores");
+            entity.ToTable("modulescores");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.TestId).HasColumnName("testid");
