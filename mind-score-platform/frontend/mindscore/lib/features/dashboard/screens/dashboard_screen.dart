@@ -340,7 +340,13 @@ class _AvatarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = (auth.name ?? auth.email ?? 'U')[0].toUpperCase();
+    final _nameStr = auth.name?.trim();
+    final _emailStr = auth.email?.trim();
+    final initial = (_nameStr != null && _nameStr.isNotEmpty)
+        ? _nameStr[0].toUpperCase()
+        : (_emailStr != null && _emailStr.isNotEmpty)
+            ? _emailStr[0].toUpperCase()
+            : 'U';
     return PopupMenuButton<String>(
       tooltip: '',
       child: CircleAvatar(
