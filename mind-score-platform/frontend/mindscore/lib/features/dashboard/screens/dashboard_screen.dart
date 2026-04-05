@@ -78,7 +78,7 @@ class _MobileLayout extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: _GreetingSection(email: auth.email),
+                child: _GreetingSection(name: auth.name),
               ),
             ),
             SliverToBoxAdapter(
@@ -212,7 +212,7 @@ class _TabletDesktopLayout extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _GreetingSection(email: auth.email),
+                      _GreetingSection(name: auth.name),
                       const SizedBox(height: 28),
                       _StatsRow(
                           resultsState: resultsState,
@@ -340,7 +340,7 @@ class _AvatarMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = (auth.email ?? 'U')[0].toUpperCase();
+    final initial = (auth.name ?? auth.email ?? 'U')[0].toUpperCase();
     return PopupMenuButton<String>(
       tooltip: '',
       child: CircleAvatar(
@@ -386,9 +386,9 @@ class _AvatarMenu extends StatelessWidget {
 // Greeting
 // ─────────────────────────────────────────────────────
 class _GreetingSection extends StatelessWidget {
-  final String? email;
+  final String? name;
 
-  const _GreetingSection({required this.email});
+  const _GreetingSection({required this.name});
 
   String get _greeting {
     final h = DateTime.now().hour;
@@ -397,10 +397,9 @@ class _GreetingSection extends StatelessWidget {
     return 'Good evening';
   }
 
-  String get _name {
-    if (email == null) return 'there';
-    final local = email!.split('@').first;
-    return local[0].toUpperCase() + local.substring(1);
+  String get _displayName {
+    if (name == null || name!.trim().isEmpty) return 'there';
+    return name!.trim();
   }
 
   @override
@@ -410,7 +409,7 @@ class _GreetingSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$_greeting, $_name 👋',
+          '$_greeting, $_displayName 👋',
           style: theme.textTheme.headlineSmall?.copyWith(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,

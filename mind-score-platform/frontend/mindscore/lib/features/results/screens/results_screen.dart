@@ -11,6 +11,7 @@ import '../../../core/models/auth_models.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/test/providers/test_provider.dart';
+import '../../../core/models/mpi_models.dart';
 import '../../../features/results/providers/mpi_result_provider.dart';
 import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_legend_header.dart';
@@ -66,6 +67,19 @@ class _MpiDisplayData {
           result.insights?['communicationStyle'] as String? ?? '',
     );
   }
+
+  factory _MpiDisplayData.fromMpiResult(MpiResult r) {
+    return _MpiDisplayData(
+      typeCode: r.typeCode,
+      typeName: r.typeName,
+      emoji: r.emoji,
+      tagline: r.tagline,
+      strengths: r.strengths,
+      growthAreas: r.growthAreas,
+      careerPaths: r.careerPaths,
+      communicationStyle: r.communicationStyle,
+    );
+  }
 }
 
 // ─── Results screen ───────────────────────────────────────────────────────────
@@ -98,8 +112,14 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     return s == 0 ? '${m}m' : '${m}m ${s}s';
   }
 
+  String? get _resultId {
+    final testResultId = ref.read(testProvider).result?.id;
+    if (testResultId != null) return testResultId;
+    return ref.read(mpiResultProvider).valueOrNull?.id;
+  }
+
   Future<void> _downloadReport() async {
-    final resultId = ref.read(testProvider).result?.id;
+    final resultId = _resultId;
     if (resultId == null) return;
 
     setState(() => _isDownloading = true);
@@ -131,9 +151,14 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 
   Future<void> _shareResults() async {
     final result = ref.read(testProvider).result;
+    final mpi = ref.read(mpiResultProvider).valueOrNull;
+    final emoji = result?.emoji ?? mpi?.emoji ?? '🧠';
+    final typeName = result?.typeName ?? mpi?.typeName ?? '';
+    final typeCode = result?.typeCode ?? mpi?.typeCode ?? '';
+    final tagline = result?.tagline ?? mpi?.tagline ?? '';
     final text = 'I just discovered my personality type on MindScore!\n'
-        '${result?.emoji ?? '🧠'} ${result?.typeName ?? ''} (${result?.typeCode ?? ''})\n'
-        '"${result?.tagline ?? ''}"\n'
+        '$emoji $typeName ($typeCode)\n'
+        '"$tagline"\n'
         'Powered by MindScore — mind-score.com';
     await Clipboard.setData(ClipboardData(text: text));
     _showSnack('Results copied to clipboard — paste to share!');
@@ -151,33 +176,60 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     final test = ref.watch(testProvider);
 
     if (test.result == null && !test.isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.backgroundDark,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.assignment_outlined,
-                  size: 64, color: AppColors.textMuted),
-              const SizedBox(height: 16),
-              Text(
-                'No results to display.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () {
-                  ref.read(testProvider.notifier).reset();
-                  context.go(AppRoutes.dashboard);
-                },
-                style: FilledButton.styleFrom(backgroundColor: _kPurple),
-                child: const Text('Go to Dashboard'),
-              ),
-            ],
+      final mpiResult = ref.watch(mpiResultProvider).valueOrNull;
+      if (mpiResult == null) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundDark,
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.assignment_outlined,
+                    size: 64, color: AppColors.textMuted),
+                const SizedBox(height: 16),
+                Text(
+                  'No results to display.',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () {
+                    ref.read(testProvider.notifier).reset();
+                    context.go(AppRoutes.dashboard);
+                  },
+                  style: FilledButton.styleFrom(backgroundColor: _kPurple),
+                  child: const Text('Go to Dashboard'),
+                ),
+              ],
+            ),
           ),
+        );
+      }
+
+      final mpiData = _MpiDisplayData.fromMpiResult(mpiResult);
+      return ResponsiveWrapper(
+        mobile: (ctx) => _MobileLayout(
+          mpiData: mpiData,
+          duration: '',
+          testName: mpiResult.testName,
+          isDownloading: _isDownloading,
+          onDownload: _downloadReport,
+          onShare: _shareResults,
+          onBack: () => context.go(AppRoutes.dashboard),
+          ref: ref,
+        ),
+        desktop: (ctx) => _WideLayout(
+          mpiData: mpiData,
+          duration: '',
+          testName: mpiResult.testName,
+          isDownloading: _isDownloading,
+          onDownload: _downloadReport,
+          onShare: _shareResults,
+          onBack: () => context.go(AppRoutes.dashboard),
+          ref: ref,
         ),
       );
     }
