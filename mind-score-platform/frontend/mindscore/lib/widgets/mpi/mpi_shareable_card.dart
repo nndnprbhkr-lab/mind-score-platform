@@ -66,7 +66,7 @@ class _SquareLayout extends StatelessWidget {
             child: Column(
               children: [
                 const Text(
-                  'MINDSCORE · MPI',
+                  'MINDSCORE · MINDTYPE',
                   style: TextStyle(
                     fontSize: 9,
                     color: _kVeryMuted,
@@ -252,7 +252,7 @@ class _StoryLayout extends StatelessWidget {
             child: Column(
               children: [
                 const Text(
-                  'MINDSCORE · MPI',
+                  'MINDSCORE · MINDTYPE',
                   style: TextStyle(
                     fontSize: 10,
                     color: _kVeryMuted,
@@ -384,7 +384,7 @@ class _WideLayout extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'MINDSCORE MPI',
+                  'MINDSCORE MINDTYPE',
                   style: TextStyle(
                     fontSize: 8,
                     color: _kVeryMuted,

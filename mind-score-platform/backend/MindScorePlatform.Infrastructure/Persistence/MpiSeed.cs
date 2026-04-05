@@ -23,7 +23,7 @@ internal static class MpiSeed
     internal static readonly Test Test = new()
     {
         Id = TestId,
-        Name = "MPI Assessment",
+        Name = "MindType Assessment",
         CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
     };
 

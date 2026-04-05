@@ -180,7 +180,7 @@ class MpiResult {
     return MpiResult(
       id: j['id'] as String,
       testId: j['testId'] as String,
-      testName: j['testName'] as String? ?? 'MPI Assessment',
+      testName: j['testName'] as String? ?? 'MindType Assessment',
       overallScore: (j['score'] as num).toInt(),
       typeCode: j['typeCode'] as String? ?? '',
       typeName: j['typeName'] as String? ?? '',

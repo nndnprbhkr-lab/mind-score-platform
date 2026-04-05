@@ -15,4 +15,12 @@ public sealed class User
     public bool IsGuest { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }
+
+    public DateTime? DateOfBirth { get; set; }
+
+    public string? Domicile { get; set; }
+
+    public Guid? AgeBandId { get; set; }
+
+    public AgeBand? AgeBand { get; set; }
 }

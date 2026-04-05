@@ -14,4 +14,13 @@ public sealed class Question
     public int Order { get; set; }
 
     public DateTime CreatedAtUtc { get; set; }
+
+    public Guid? ModuleId { get; set; }
+    public Guid? AgeBandId { get; set; }
+    public string? Difficulty { get; set; }
+    public decimal? Weight { get; set; }
+    public bool? IsReverseScored { get; set; }
+    public int? Version { get; set; }
+    public Module? Module { get; set; }
+    public AgeBand? AgeBand { get; set; }
 }

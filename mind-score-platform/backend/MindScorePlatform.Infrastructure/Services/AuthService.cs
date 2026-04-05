@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using MindScorePlatform.Application.DTOs;
 using MindScorePlatform.Application.Interfaces;
 using MindScorePlatform.Domain.Entities;
+using MindScorePlatform.Infrastructure.Persistence;
 
 namespace MindScorePlatform.Infrastructure.Services;
 
@@ -8,11 +10,13 @@ public sealed class AuthService : IAuthService
 {
     private readonly IUserRepository _users;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly AppDbContext _db;
 
-    public AuthService(IUserRepository users, IJwtTokenService jwtTokenService)
+    public AuthService(IUserRepository users, IJwtTokenService jwtTokenService, AppDbContext db)
     {
         _users = users;
         _jwtTokenService = jwtTokenService;
+        _db = db;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request, CancellationToken cancellationToken)
@@ -23,12 +27,29 @@ public sealed class AuthService : IAuthService
             throw new InvalidOperationException("Email already registered.");
         }
 
+        Guid? ageBandId = null;
+        if (request.DateOfBirth.HasValue)
+        {
+            var age = DateTime.UtcNow.Year - request.DateOfBirth.Value.Year;
+            if (DateTime.UtcNow.DayOfYear < request.DateOfBirth.Value.DayOfYear) age--;
+
+            var ageBand = await _db.AgeBands
+                .Where(a => a.IsActive && a.MinAge <= age && a.MaxAge >= age)
+                .OrderBy(a => a.DisplayOrder)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            ageBandId = ageBand?.Id;
+        }
+
         var user = new User
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
             Email = request.Email,
             PasswordHash = PasswordHasher.Hash(request.Password),
+            DateOfBirth = request.DateOfBirth,
+            Domicile = request.Domicile,
+            AgeBandId = ageBandId,
             CreatedAtUtc = DateTime.UtcNow,
         };
 

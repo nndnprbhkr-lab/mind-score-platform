@@ -20,8 +20,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _domicileCtrl = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
+  DateTime? _dateOfBirth;
 
   @override
   void dispose() {
@@ -29,14 +31,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
+    _domicileCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref
-        .read(authProvider.notifier)
-        .register(_nameCtrl.text.trim(), _emailCtrl.text.trim(), _passwordCtrl.text);
+    await ref.read(authProvider.notifier).register(
+          _nameCtrl.text.trim(),
+          _emailCtrl.text.trim(),
+          _passwordCtrl.text,
+          dateOfBirth: _dateOfBirth,
+          domicile: _domicileCtrl.text.trim().isEmpty ? null : _domicileCtrl.text.trim(),
+        );
   }
 
   @override
@@ -221,6 +228,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               style: TextStyle(color: kAuthMuted, fontSize: 12),
             ),
           ).animate(delay: 300.ms).fadeIn(duration: 300.ms),
+
+          const SizedBox(height: 14),
+
+          // Date of Birth picker
+          GestureDetector(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _dateOfBirth ?? DateTime(2000),
+                firstDate: DateTime(1924),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) setState(() => _dateOfBirth = picked);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A0D36),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF3D2070)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.cake_outlined, size: 20, color: Color(0xFF9a85c8)),
+                  const SizedBox(width: 12),
+                  Text(
+                    _dateOfBirth == null
+                        ? 'Date of Birth (optional)'
+                        : '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}',
+                    style: TextStyle(
+                      color: _dateOfBirth == null
+                          ? const Color(0xFF9a85c8)
+                          : Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ).animate(delay: 310.ms).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0),
+
+          const SizedBox(height: 14),
+
+          // Country / Domicile
+          AuthTextField(
+            controller: _domicileCtrl,
+            hint: 'Country (optional)',
+            icon: Icons.public_outlined,
+            keyboardType: TextInputType.text,
+            textInputAction: TextInputAction.done,
+          ).animate(delay: 330.ms).fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0),
 
           const SizedBox(height: 24),
 

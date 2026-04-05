@@ -15,6 +15,7 @@ import '../../../core/models/mpi_models.dart';
 import '../../../features/results/providers/mpi_result_provider.dart';
 import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_legend_header.dart';
+import 'mind_score_results_screen.dart';
 import '../../../widgets/mpi/mpi_radar_chart.dart';
 import '../../../widgets/mpi/mpi_dimension_row.dart';
 import '../../../widgets/mpi/mpi_action_plan_card.dart';
@@ -57,7 +58,7 @@ class _MpiDisplayData {
 
     return _MpiDisplayData(
       typeCode: result.typeCode ?? '',
-      typeName: result.typeName ?? 'Your MPI Profile',
+      typeName: result.typeName ?? 'Your MindType Profile',
       emoji: result.emoji ?? '🧠',
       tagline: result.tagline ?? '',
       strengths: parseList('strengths'),
@@ -174,6 +175,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   @override
   Widget build(BuildContext context) {
     final test = ref.watch(testProvider);
+
+    // Route MindScore results to the dedicated screen
+    if (test.result?.typeCode == 'MIND_SCORE') {
+      return MindScoreResultsScreen(resultModel: test.result!);
+    }
 
     if (test.result == null && !test.isLoading) {
       final mpiResult = ref.watch(mpiResultProvider).valueOrNull;
@@ -721,7 +727,7 @@ class _InfoCardsRow extends StatelessWidget {
       ),
       const _MiniInfoCard(
         label: 'Assessment',
-        value: 'MPI',
+        value: 'MindType',
         color: _kPink,
       ),
       _MiniInfoCard(

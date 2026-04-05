@@ -71,7 +71,7 @@ class _MpiShareModalState extends State<_MpiShareModal> {
 
       await Share.shareXFiles(
         [XFile.fromData(bytes, name: 'mindscore_mpi_result.png', mimeType: 'image/png')],
-        text: 'I am ${widget.result.typeName} on the MindScore MPI. '
+        text: 'I am ${widget.result.typeName} on MindScore MindType. '
             'Discover yours at mindscore.app',
       );
     } finally {
@@ -144,7 +144,7 @@ class _MpiShareModalState extends State<_MpiShareModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Share your MPI result',
+                  'Share your MindType result',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white,

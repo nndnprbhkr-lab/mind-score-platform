@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IMpiScoringEngine, MpiScoringEngine>();
         services.AddSingleton<IMpiActionPlanEngine, MpiActionPlanEngine>();
+        services.AddScoped<IMindScoringEngine, MindScoringEngine>();
 
         services.AddScoped<ITestRepository, TestRepository>();
         services.AddScoped<IQuestionRepository, QuestionRepository>();

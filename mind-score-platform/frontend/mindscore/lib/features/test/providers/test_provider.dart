@@ -35,6 +35,7 @@ class TestState {
   final bool isLoading;
   final String? error;
   final ResultModel? result;
+  final Map<String, dynamic>? rawResultJson;
 
   const TestState({
     this.testId = '',
@@ -46,6 +47,7 @@ class TestState {
     this.isLoading = false,
     this.error,
     this.result,
+    this.rawResultJson,
   });
 
   double get progress =>
@@ -68,6 +70,7 @@ class TestState {
     bool? isLoading,
     String? error,
     ResultModel? result,
+    Map<String, dynamic>? rawResultJson,
   }) {
     return TestState(
       testId: testId ?? this.testId,
@@ -79,6 +82,7 @@ class TestState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       result: result ?? this.result,
+      rawResultJson: rawResultJson ?? this.rawResultJson,
     );
   }
 }
@@ -185,7 +189,11 @@ class TestNotifier extends StateNotifier<TestState> {
         auth: true,
       );
       final result = ResultModel.fromJson(json);
-      state = state.copyWith(isLoading: false, result: result);
+      state = state.copyWith(
+        isLoading: false,
+        result: result,
+        rawResultJson: json,
+      );
       return result;
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);

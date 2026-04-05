@@ -609,7 +609,7 @@ class _EmptyStateCard extends ConsumerWidget {
           const Text('🧠', style: TextStyle(fontSize: 40)),
           const SizedBox(height: 12),
           const Text(
-            'Discover your MPI type',
+            'Discover your MindType',
             style: TextStyle(
               fontSize: 16,
               color: Colors.white,

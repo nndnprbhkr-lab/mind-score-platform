@@ -29,7 +29,7 @@ class MpiLegendHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Understanding your MPI code',
+            'Understanding your MindType code',
             style: TextStyle(
               fontSize: 11,
               color: _kLight,

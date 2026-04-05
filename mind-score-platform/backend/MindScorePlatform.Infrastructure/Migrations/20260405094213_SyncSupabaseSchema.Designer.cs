@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MindScorePlatform.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MindScorePlatform.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260405094213_SyncSupabaseSchema")]
+    partial class SyncSupabaseSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,37 +62,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("agebands", (string)null);
-                });
-
-            modelBuilder.Entity("MindScorePlatform.Domain.Entities.AgeBandModuleWeight", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AgeBandId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("agebandid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("moduleid");
-
-                    b.Property<double>("Weight")
-                        .HasColumnType("double precision")
-                        .HasColumnName("weight");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgeBandId");
-
-                    b.HasIndex("ModuleId");
-
-                    b.ToTable("age_band_module_weights", (string)null);
                 });
 
             modelBuilder.Entity("MindScorePlatform.Domain.Entities.Module", b =>
@@ -158,45 +130,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     b.HasIndex("ModuleId");
 
                     b.ToTable("module_scores", (string)null);
-                });
-
-            modelBuilder.Entity("MindScorePlatform.Domain.Entities.NormReference", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AgeBandId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("agebandid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("createdat");
-
-                    b.Property<double>("Mean")
-                        .HasColumnType("double precision")
-                        .HasColumnName("mean");
-
-                    b.Property<Guid>("ModuleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("moduleid");
-
-                    b.Property<int>("SampleSize")
-                        .HasColumnType("integer")
-                        .HasColumnName("samplesize");
-
-                    b.Property<double>("StandardDeviation")
-                        .HasColumnType("double precision")
-                        .HasColumnName("standarddeviation");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgeBandId");
-
-                    b.HasIndex("ModuleId");
-
-                    b.ToTable("norm_references", (string)null);
                 });
 
             modelBuilder.Entity("MindScorePlatform.Domain.Entities.Question", b =>
@@ -567,7 +500,7 @@ namespace MindScorePlatform.Infrastructure.Migrations
                         {
                             Id = new Guid("00000000-0000-0000-0000-000000000001"),
                             CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Name = "MindType Assessment"
+                            Name = "MPI Assessment"
                         });
                 });
 
@@ -577,20 +510,8 @@ namespace MindScorePlatform.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AgeBandId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("agebandid");
-
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("dateofbirth");
-
-                    b.Property<string>("Domicile")
-                        .HasColumnType("text")
-                        .HasColumnName("domicile");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -613,31 +534,10 @@ namespace MindScorePlatform.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AgeBandId");
-
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("MindScorePlatform.Domain.Entities.AgeBandModuleWeight", b =>
-                {
-                    b.HasOne("MindScorePlatform.Domain.Entities.AgeBand", "AgeBand")
-                        .WithMany()
-                        .HasForeignKey("AgeBandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MindScorePlatform.Domain.Entities.Module", "Module")
-                        .WithMany()
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AgeBand");
-
-                    b.Navigation("Module");
                 });
 
             modelBuilder.Entity("MindScorePlatform.Domain.Entities.ModuleScore", b =>
@@ -647,25 +547,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                         .HasForeignKey("ModuleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Module");
-                });
-
-            modelBuilder.Entity("MindScorePlatform.Domain.Entities.NormReference", b =>
-                {
-                    b.HasOne("MindScorePlatform.Domain.Entities.AgeBand", "AgeBand")
-                        .WithMany()
-                        .HasForeignKey("AgeBandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MindScorePlatform.Domain.Entities.Module", "Module")
-                        .WithMany()
-                        .HasForeignKey("ModuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AgeBand");
 
                     b.Navigation("Module");
                 });
@@ -683,15 +564,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     b.Navigation("AgeBand");
 
                     b.Navigation("Module");
-                });
-
-            modelBuilder.Entity("MindScorePlatform.Domain.Entities.User", b =>
-                {
-                    b.HasOne("MindScorePlatform.Domain.Entities.AgeBand", "AgeBand")
-                        .WithMany()
-                        .HasForeignKey("AgeBandId");
-
-                    b.Navigation("AgeBand");
                 });
 
             modelBuilder.Entity("MindScorePlatform.Domain.Entities.AgeBand", b =>

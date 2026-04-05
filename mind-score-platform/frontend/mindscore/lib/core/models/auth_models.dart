@@ -91,10 +91,24 @@ class RegisterRequest {
   final String name;
   final String email;
   final String password;
+  final DateTime? dateOfBirth;
+  final String? domicile;
 
-  const RegisterRequest({required this.name, required this.email, required this.password});
+  const RegisterRequest({
+    required this.name,
+    required this.email,
+    required this.password,
+    this.dateOfBirth,
+    this.domicile,
+  });
 
-  Map<String, dynamic> toJson() => {'name': name, 'email': email, 'password': password};
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'email': email,
+        'password': password,
+        if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
+        if (domicile != null) 'domicile': domicile,
+      };
 }
 
 class GuestLoginRequest {

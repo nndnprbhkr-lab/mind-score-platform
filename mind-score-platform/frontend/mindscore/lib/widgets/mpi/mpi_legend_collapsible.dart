@@ -59,7 +59,7 @@ class _Content extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'MPI dimension guide',
+            'MindType dimension guide',
             style: TextStyle(
               fontSize: 11,
               color: _kLight,

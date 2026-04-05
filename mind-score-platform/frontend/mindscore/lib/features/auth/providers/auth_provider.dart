@@ -108,12 +108,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> register(
+    String name,
+    String email,
+    String password, {
+    DateTime? dateOfBirth,
+    String? domicile,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final json = await ApiClient.post(
         ApiConstants.register,
-        RegisterRequest(name: name, email: email, password: password).toJson(),
+        RegisterRequest(
+          name: name,
+          email: email,
+          password: password,
+          dateOfBirth: dateOfBirth,
+          domicile: domicile,
+        ).toJson(),
       );
       final response = AuthResponse.fromJson(json);
       await TokenStorage.save(
