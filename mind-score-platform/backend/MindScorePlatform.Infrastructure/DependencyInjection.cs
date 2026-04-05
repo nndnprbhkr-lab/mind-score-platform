@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IMpiScoringEngine, MpiScoringEngine>();
+        services.AddSingleton<IMpiActionPlanEngine, MpiActionPlanEngine>();
 
         services.AddScoped<ITestRepository, TestRepository>();
         services.AddScoped<IQuestionRepository, QuestionRepository>();

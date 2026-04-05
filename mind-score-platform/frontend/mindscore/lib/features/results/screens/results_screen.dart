@@ -14,6 +14,9 @@ import '../../../features/test/providers/test_provider.dart';
 import '../../../features/results/providers/mpi_result_provider.dart';
 import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_legend_header.dart';
+import '../../../widgets/mpi/mpi_radar_chart.dart';
+import '../../../widgets/mpi/mpi_dimension_row.dart';
+import '../../../widgets/mpi/mpi_action_plan_card.dart';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const _kPurple = Color(0xFF6B35C8);
@@ -252,6 +255,8 @@ class _MobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mpiResult = ref.watch(mpiResultProvider).valueOrNull;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
@@ -268,6 +273,7 @@ class _MobileLayout extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
+          // 1. MpiLegendHeader
           Consumer(builder: (context, ref, _) {
             final mpi = ref.watch(mpiResultProvider);
             return mpi.maybeWhen(
@@ -282,20 +288,44 @@ class _MobileLayout extends StatelessWidget {
               orElse: () => const SizedBox.shrink(),
             );
           }),
+
+          // 2. _HeroCard
           _HeroCard(mpiData: mpiData)
               .animate()
               .fadeIn(duration: 400.ms)
               .slideY(begin: 0.06, end: 0),
 
+          // 3. SizedBox(16)
           const SizedBox(height: 16),
 
-          _InfoCardsRow(mpiData: mpiData, duration: duration)
-              .animate(delay: 80.ms)
-              .fadeIn(duration: 350.ms)
-              .slideY(begin: 0.06, end: 0),
+          // 4. Radar chart container
+          if (mpiResult != null)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              decoration: BoxDecoration(
+                color: _kCardBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _kCardBorder),
+              ),
+              child: Center(
+                child: MpiRadarChart(result: mpiResult, size: 260),
+              ),
+            ).animate(delay: 60.ms).fadeIn(duration: 400.ms),
 
+          // 5. SizedBox(16)
           const SizedBox(height: 16),
 
+          // 6. MpiDimensionRow
+          if (mpiResult != null)
+            MpiDimensionRow(result: mpiResult)
+                .animate(delay: 80.ms)
+                .fadeIn(duration: 350.ms)
+                .slideY(begin: 0.06, end: 0),
+
+          // 7. SizedBox(16)
+          const SizedBox(height: 16),
+
+          // 8. Strengths
           _InsightCard(
             title: 'Your Strengths',
             dotColor: _kPurple,
@@ -305,8 +335,10 @@ class _MobileLayout extends StatelessWidget {
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
 
+          // 9. SizedBox(12)
           const SizedBox(height: 12),
 
+          // 10. Growth Areas
           _InsightCard(
             title: 'Growth Areas',
             dotColor: _kPurpleLight,
@@ -316,8 +348,19 @@ class _MobileLayout extends StatelessWidget {
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
 
+          // 11. SizedBox(12)
           const SizedBox(height: 12),
 
+          // 12. MpiActionPlanCard
+          if (mpiResult != null)
+            MpiActionPlanCard(result: mpiResult)
+                .animate(delay: 200.ms)
+                .fadeIn(duration: 350.ms),
+
+          // 13. SizedBox(12)
+          const SizedBox(height: 12),
+
+          // 14. Career Paths
           _InsightCard(
             title: 'Career Paths',
             dotColor: _kPink,
@@ -327,15 +370,19 @@ class _MobileLayout extends StatelessWidget {
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
 
+          // 15. SizedBox(24)
           const SizedBox(height: 24),
 
+          // 16. Download button
           _DownloadButton(
             isLoading: isDownloading,
             onTap: onDownload,
           ).animate(delay: 280.ms).fadeIn(duration: 300.ms),
 
+          // 17. SizedBox(12)
           const SizedBox(height: 12),
 
+          // 18. Share button
           _ShareButton(onTap: onShare)
               .animate(delay: 320.ms)
               .fadeIn(duration: 300.ms),
@@ -371,6 +418,8 @@ class _WideLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mpiResult = ref.watch(mpiResultProvider).valueOrNull;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
@@ -402,6 +451,41 @@ class _WideLayout extends StatelessWidget {
                   _InfoCardsRow(mpiData: mpiData, duration: duration)
                       .animate(delay: 80.ms)
                       .fadeIn(duration: 350.ms),
+
+                  if (mpiResult != null) ...[
+                    const SizedBox(height: 20),
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 20),
+                            decoration: BoxDecoration(
+                              color: _kCardBg,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: _kCardBorder),
+                            ),
+                            child: Center(
+                              child: MpiRadarChart(
+                                  result: mpiResult, size: 220),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: MpiDimensionRow(result: mpiResult),
+                        ),
+                      ],
+                    ).animate(delay: 100.ms).fadeIn(duration: 350.ms),
+
+                    const SizedBox(height: 24),
+
+                    MpiActionPlanCard(result: mpiResult)
+                        .animate(delay: 120.ms)
+                        .fadeIn(duration: 350.ms),
+                  ],
 
                   const SizedBox(height: 24),
 
@@ -581,7 +665,7 @@ class _InfoCardsRow extends StatelessWidget {
         value: mpiData.typeCode.isNotEmpty ? mpiData.typeCode : '—',
         color: _kPurpleLight,
       ),
-      _MiniInfoCard(
+      const _MiniInfoCard(
         label: 'Assessment',
         value: 'MPI',
         color: _kPink,
