@@ -25,6 +25,7 @@ public sealed class AppDbContext : DbContext
     {
         modelBuilder.Entity<User>(entity =>
         {
+            entity.ToTable("users");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.Email).IsUnique();
             entity.Property(x => x.Name).IsRequired();
@@ -38,6 +39,7 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<Test>(entity =>
         {
+            entity.ToTable("tests");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Name).IsRequired();
             entity.HasData(MpiSeed.Test);
@@ -45,6 +47,7 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<Question>(entity =>
         {
+            entity.ToTable("questions");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Code).IsRequired();
             entity.Property(x => x.Text).IsRequired();
@@ -69,6 +72,7 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<Response>(entity =>
         {
+            entity.ToTable("responses");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Value).IsRequired();
             entity.HasIndex(x => new { x.UserId, x.QuestionId }).IsUnique();
@@ -76,6 +80,7 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<Result>(entity =>
         {
+            entity.ToTable("results");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.UserId, x.TestId }).IsUnique();
             entity.Property(x => x.PersonalityType).IsRequired();
@@ -88,6 +93,7 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<Report>(entity =>
         {
+            entity.ToTable("reports");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Title).IsRequired();
             entity.Property(x => x.Content).IsRequired();
