@@ -97,7 +97,8 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("agebands");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).IsRequired().HasColumnName("name");
             entity.Property(x => x.MinAge).HasColumnName("minage");
             entity.Property(x => x.MaxAge).HasColumnName("maxage");
             entity.Property(x => x.Description).HasColumnName("description");
@@ -110,7 +111,8 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("modules");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Name).IsRequired();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).IsRequired().HasColumnName("name");
             entity.Property(x => x.Description).HasColumnName("description");
             entity.Property(x => x.DisplayOrder).HasColumnName("displayorder");
             entity.Property(x => x.IsActive).HasColumnName("isactive");
@@ -121,6 +123,7 @@ public sealed class AppDbContext : DbContext
         {
             entity.ToTable("module_scores");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.TestId).HasColumnName("testid");
             entity.Property(x => x.ModuleId).HasColumnName("moduleid");
             entity.Property(x => x.RawScore).HasColumnName("rawscore");
@@ -134,8 +137,9 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<NormReference>(entity =>
         {
-            entity.ToTable("norm_references");
+            entity.ToTable("normreferences");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.ModuleId).HasColumnName("moduleid");
             entity.Property(x => x.AgeBandId).HasColumnName("agebandid");
             entity.Property(x => x.Mean).HasColumnName("mean");
@@ -148,8 +152,9 @@ public sealed class AppDbContext : DbContext
 
         modelBuilder.Entity<AgeBandModuleWeight>(entity =>
         {
-            entity.ToTable("age_band_module_weights");
+            entity.ToTable("agebandmoduleweights");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.AgeBandId).HasColumnName("agebandid");
             entity.Property(x => x.ModuleId).HasColumnName("moduleid");
             entity.Property(x => x.Weight).HasColumnName("weight");
