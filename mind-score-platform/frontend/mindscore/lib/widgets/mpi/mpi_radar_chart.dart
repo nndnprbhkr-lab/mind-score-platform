@@ -3,6 +3,28 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/mpi_models.dart';
 
+// ── Axis config ────────────────────────────────────────────────────────────────
+
+const _kAxisKeys = [
+  'EnergySource',
+  'PerceptionMode',
+  'DecisionStyle',
+  'LifeApproach',
+];
+
+const _kAxisLabels = ['Energy', 'Perception', 'Decision', 'Approach'];
+
+const _kAxisAngles = [-pi / 2, 0.0, pi / 2, pi];
+
+const _kAxisColors = [
+  Color(0xFFFF6B9D),
+  Color(0xFF5DCAA5),
+  Color(0xFFF5B740),
+  Color(0xFF6B35C8),
+];
+
+// ── Widget ─────────────────────────────────────────────────────────────────────
+
 class MpiRadarChart extends StatefulWidget {
   final MpiResult result;
   final double size;
@@ -17,6 +39,10 @@ class _MpiRadarChartState extends State<MpiRadarChart>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
+  int _hoveredAxis = -1;
+
+  double get _maxR => (widget.size - 96) / 2;
+  Offset get _center => Offset(widget.size / 2, widget.size / 2);
 
   @override
   void initState() {
@@ -35,95 +61,100 @@ class _MpiRadarChartState extends State<MpiRadarChart>
     super.dispose();
   }
 
+  List<Offset> _computeVertices() {
+    return List.generate(_kAxisKeys.length, (i) {
+      final dim = widget.result.dimensions[_kAxisKeys[i]];
+      final pct = dim?.percentage ?? 50.0;
+      final r = (pct / 100) * _maxR * _anim.value;
+      return Offset(
+        _center.dx + r * cos(_kAxisAngles[i]),
+        _center.dy + r * sin(_kAxisAngles[i]),
+      );
+    });
+  }
+
+  void _onHover(Offset localPos) {
+    if (_anim.value < 0.5) return;
+    final vertices = _computeVertices();
+    const hitRadius = 18.0;
+    int found = -1;
+    for (var i = 0; i < vertices.length; i++) {
+      if ((localPos - vertices[i]).distance <= hitRadius) {
+        found = i;
+        break;
+      }
+    }
+    if (found != _hoveredAxis) setState(() => _hoveredAxis = found);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.size,
-      height: widget.size,
-      child: AnimatedBuilder(
-        animation: _anim,
-        builder: (context, _) {
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              CustomPaint(
-                size: Size(widget.size, widget.size),
-                painter: _RadarPainter(
-                  result: widget.result,
-                  progress: _anim.value,
-                  size: widget.size,
+    return MouseRegion(
+      onHover: (e) => _onHover(e.localPosition),
+      onExit: (_) => setState(() => _hoveredAxis = -1),
+      cursor: _hoveredAxis >= 0
+          ? SystemMouseCursors.click
+          : MouseCursor.defer,
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(
+          animation: _anim,
+          builder: (context, _) {
+            final vertices = _computeVertices();
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CustomPaint(
+                  size: Size(widget.size, widget.size),
+                  painter: _RadarPainter(
+                    result: widget.result,
+                    progress: _anim.value,
+                    size: widget.size,
+                    hoveredAxis: _hoveredAxis,
+                    vertices: vertices,
+                  ),
                 ),
-              ),
-              ..._buildLabels(),
-            ],
-          );
-        },
+                ..._buildLabels(),
+                if (_hoveredAxis >= 0 && _anim.value > 0.5)
+                  _buildTooltip(_hoveredAxis, vertices[_hoveredAxis]),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
   List<Widget> _buildLabels() {
-    final size = widget.size;
-    final maxR = (size - 96) / 2;
-    final cx = size / 2;
-    final cy = size / 2;
     const labelW = 90.0;
     const totalH = 42.0;
 
-    final axes = [
-      (
-        key: 'EnergySource',
-        label: 'Energy',
-        angle: -pi / 2,
-        color: const Color(0xFFFF6B9D),
-      ),
-      (
-        key: 'PerceptionMode',
-        label: 'Perception',
-        angle: 0.0,
-        color: const Color(0xFF5DCAA5),
-      ),
-      (
-        key: 'DecisionStyle',
-        label: 'Decision',
-        angle: pi / 2,
-        color: const Color(0xFFF5B740),
-      ),
-      (
-        key: 'LifeApproach',
-        label: 'Approach',
-        angle: pi,
-        color: const Color(0xFF6B35C8),
-      ),
-    ];
-
-    return axes.map((axis) {
-      final dim = widget.result.dimensions[axis.key];
+    return List.generate(_kAxisKeys.length, (i) {
+      final dim = widget.result.dimensions[_kAxisKeys[i]];
       if (dim == null) return const SizedBox.shrink();
 
-      final anchorDist = maxR + 30;
-      final ax = cx + anchorDist * cos(axis.angle);
-      final ay = cy + anchorDist * sin(axis.angle);
+      final anchorDist = _maxR + 30;
+      final ax = _center.dx + anchorDist * cos(_kAxisAngles[i]);
+      final ay = _center.dy + anchorDist * sin(_kAxisAngles[i]);
 
       double left, top;
       TextAlign textAlign;
       CrossAxisAlignment crossAlign;
 
       const epsilon = 0.01;
-      if (axis.angle.abs() < epsilon) {
-        // East → left-align
+      final angle = _kAxisAngles[i];
+      if (angle.abs() < epsilon) {
         left = ax + 2;
         top = ay - totalH / 2;
         textAlign = TextAlign.left;
         crossAlign = CrossAxisAlignment.start;
-      } else if ((axis.angle.abs() - pi).abs() < epsilon) {
-        // West → right-align
+      } else if ((angle.abs() - pi).abs() < epsilon) {
         left = ax - labelW - 2;
         top = ay - totalH / 2;
         textAlign = TextAlign.right;
         crossAlign = CrossAxisAlignment.end;
       } else {
-        // North / South → center
         left = ax - labelW / 2;
         top = ay - totalH / 2;
         textAlign = TextAlign.center;
@@ -139,9 +170,9 @@ class _MpiRadarChartState extends State<MpiRadarChart>
           crossAxisAlignment: crossAlign,
           children: [
             Text(
-              axis.label,
+              _kAxisLabels[i],
               style: GoogleFonts.poppins(
-                color: axis.color,
+                color: _kAxisColors[i],
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
               ),
@@ -166,19 +197,121 @@ class _MpiRadarChartState extends State<MpiRadarChart>
           ],
         ),
       );
-    }).toList();
+    });
+  }
+
+  Widget _buildTooltip(int axisIndex, Offset vertex) {
+    final key = _kAxisKeys[axisIndex];
+    final dim = widget.result.dimensions[key];
+    final meta = MpiDimensionMeta.forKey(key);
+    if (dim == null || meta == null) return const SizedBox.shrink();
+
+    final poleDesc = kPoleDescriptions[dim.dominantPole] ?? '';
+    final poleWord = dim.dominantPole == meta.leftPole
+        ? meta.leftWord
+        : meta.rightWord;
+    final color = _kAxisColors[axisIndex];
+
+    const tooltipW = 180.0;
+    const padding = 12.0;
+
+    double left = vertex.dx + padding;
+    double top = vertex.dy - padding - 90;
+    if (left + tooltipW > widget.size) left = vertex.dx - tooltipW - padding;
+    if (top < 0) top = vertex.dy + padding;
+    if (left < 0) left = 0;
+
+    return Positioned(
+      left: left,
+      top: top,
+      width: tooltipW,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+          decoration: BoxDecoration(
+            color: const Color(0xFF150A28),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: color.withValues(alpha: 0.55), width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.22),
+                blurRadius: 14,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Text(meta.emoji,
+                      style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 5),
+                  Text(
+                    meta.name,
+                    style: GoogleFonts.poppins(
+                      color: color,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$poleWord — ${dim.percentage.round()}%',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                dim.strength,
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF9A85C8),
+                  fontSize: 9,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              if (poleDesc.isNotEmpty) ...[
+                const SizedBox(height: 5),
+                Text(
+                  poleDesc,
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF6A5090),
+                    fontSize: 8.5,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
+
+// ── Painter ────────────────────────────────────────────────────────────────────
 
 class _RadarPainter extends CustomPainter {
   final MpiResult result;
   final double progress;
   final double size;
+  final int hoveredAxis;
+  final List<Offset> vertices;
 
   const _RadarPainter({
     required this.result,
     required this.progress,
     required this.size,
+    required this.hoveredAxis,
+    required this.vertices,
   });
 
   @override
@@ -186,7 +319,7 @@ class _RadarPainter extends CustomPainter {
     final maxR = (size - 96) / 2;
     final center = Offset(size / 2, size / 2);
 
-    // 3 concentric square-grid rings at 25%, 50%, 75%
+    // ── Grid rings at 25 / 50 / 75 % ─────────────────────────────────────────
     final gridPaint = Paint()
       ..color = const Color(0xFF3D2070).withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
@@ -198,16 +331,21 @@ class _RadarPainter extends CustomPainter {
         Rect.fromCenter(center: center, width: r * 2, height: r * 2),
         gridPaint,
       );
+      // Scale label to the right of the ring's top edge
+      _paintScaleLabel(
+        canvas,
+        '${(fraction * 100).round()}%',
+        Offset(center.dx + r + 3, center.dy - r - 1),
+      );
     }
 
-    // Axis lines from center to edge
+    // ── Axis lines ────────────────────────────────────────────────────────────
     final axisPaint = Paint()
       ..color = const Color(0xFF3D2070).withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8;
 
-    const angles = [-pi / 2, 0.0, pi / 2, pi];
-    for (final angle in angles) {
+    for (final angle in _kAxisAngles) {
       canvas.drawLine(
         center,
         Offset(center.dx + maxR * cos(angle), center.dy + maxR * sin(angle)),
@@ -215,40 +353,20 @@ class _RadarPainter extends CustomPainter {
       );
     }
 
-    // Build polygon vertices
-    const axisKeys = [
-      'EnergySource',
-      'PerceptionMode',
-      'DecisionStyle',
-      'LifeApproach',
-    ];
-    final vertices = <Offset>[];
-    for (var i = 0; i < axisKeys.length; i++) {
-      final dim = result.dimensions[axisKeys[i]];
-      final pct = dim?.percentage ?? 50.0;
-      final r = (pct / 100) * maxR * progress;
-      vertices.add(Offset(
-        center.dx + r * cos(angles[i]),
-        center.dy + r * sin(angles[i]),
-      ));
-    }
-
+    // ── Data polygon ──────────────────────────────────────────────────────────
     final path = Path()..moveTo(vertices[0].dx, vertices[0].dy);
     for (var i = 1; i < vertices.length; i++) {
       path.lineTo(vertices[i].dx, vertices[i].dy);
     }
     path.close();
 
-    // Fill
     canvas.drawPath(
       path,
       Paint()
-        ..color =
-            const Color(0xFF6B35C8).withValues(alpha: 0.18 * progress)
+        ..color = const Color(0xFF6B35C8).withValues(alpha: 0.18 * progress)
         ..style = PaintingStyle.fill,
     );
 
-    // Stroke
     canvas.drawPath(
       path,
       Paint()
@@ -258,35 +376,61 @@ class _RadarPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // Dots at each vertex
-    const axisColors = [
-      Color(0xFFFF6B9D),
-      Color(0xFF5DCAA5),
-      Color(0xFFF5B740),
-      Color(0xFF6B35C8),
-    ];
+    // ── Vertex dots ───────────────────────────────────────────────────────────
     for (var i = 0; i < vertices.length; i++) {
-      // Filled dot with axis colour
+      final v = vertices[i];
+      final color = _kAxisColors[i];
+      final isHovered = i == hoveredAxis;
+
+      if (isHovered) {
+        // Glow ring
+        canvas.drawCircle(
+          v,
+          13,
+          Paint()
+            ..color = color.withValues(alpha: 0.18)
+            ..maskFilter =
+                const MaskFilter.blur(BlurStyle.normal, 6),
+        );
+        canvas.drawCircle(
+          v,
+          9,
+          Paint()
+            ..color = color.withValues(alpha: 0.45)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2,
+        );
+      }
+
+      canvas.drawCircle(v, isHovered ? 6.5 : 5,
+          Paint()..color = color..style = PaintingStyle.fill);
       canvas.drawCircle(
-        vertices[i],
-        5,
-        Paint()
-          ..color = axisColors[i]
-          ..style = PaintingStyle.fill,
-      );
-      // White border ring
-      canvas.drawCircle(
-        vertices[i],
-        5,
-        Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5,
-      );
+          v,
+          isHovered ? 6.5 : 5,
+          Paint()
+            ..color = Colors.white
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5);
     }
+  }
+
+  void _paintScaleLabel(Canvas canvas, String text, Offset position) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          color: Color(0xFF5A4080),
+          fontSize: 7.5,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, position);
   }
 
   @override
   bool shouldRepaint(_RadarPainter old) =>
-      old.progress != progress || old.result != result;
+      old.progress != progress ||
+      old.result != result ||
+      old.hoveredAxis != hoveredAxis;
 }

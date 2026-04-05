@@ -507,29 +507,31 @@ class _WideLayout extends StatelessWidget {
                   if (mpiResult != null) ...[
                     const SizedBox(height: 20),
 
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 20),
-                            decoration: BoxDecoration(
-                              color: _kCardBg,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: _kCardBorder),
-                            ),
-                            child: Center(
-                              child: MpiRadarChart(
-                                  result: mpiResult, size: 220),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 20),
+                              decoration: BoxDecoration(
+                                color: _kCardBg,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: _kCardBorder),
+                              ),
+                              child: Center(
+                                child: MpiRadarChart(
+                                    result: mpiResult, size: 220),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: MpiDimensionRow(result: mpiResult),
-                        ),
-                      ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: MpiDimensionRow(result: mpiResult),
+                          ),
+                        ],
+                      ),
                     ).animate(delay: 100.ms).fadeIn(duration: 350.ms),
 
                     const SizedBox(height: 24),
