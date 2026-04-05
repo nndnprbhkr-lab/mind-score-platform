@@ -127,14 +127,14 @@ class _MpiRadarChartState extends State<MpiRadarChart>
   }
 
   List<Widget> _buildLabels() {
-    const labelW = 90.0;
-    const totalH = 42.0;
+    const labelW = 100.0;
+    const totalH = 36.0;
 
     return List.generate(_kAxisKeys.length, (i) {
       final dim = widget.result.dimensions[_kAxisKeys[i]];
       if (dim == null) return const SizedBox.shrink();
 
-      final anchorDist = _maxR + 30;
+      final anchorDist = _maxR + 32;
       final ax = _center.dx + anchorDist * cos(_kAxisAngles[i]);
       final ay = _center.dy + anchorDist * sin(_kAxisAngles[i]);
 
@@ -145,12 +145,12 @@ class _MpiRadarChartState extends State<MpiRadarChart>
       const epsilon = 0.01;
       final angle = _kAxisAngles[i];
       if (angle.abs() < epsilon) {
-        left = ax + 2;
+        left = ax + 4;
         top = ay - totalH / 2;
         textAlign = TextAlign.left;
         crossAlign = CrossAxisAlignment.start;
       } else if ((angle.abs() - pi).abs() < epsilon) {
-        left = ax - labelW - 2;
+        left = ax - labelW - 4;
         top = ay - totalH / 2;
         textAlign = TextAlign.right;
         crossAlign = CrossAxisAlignment.end;
@@ -160,6 +160,13 @@ class _MpiRadarChartState extends State<MpiRadarChart>
         textAlign = TextAlign.center;
         crossAlign = CrossAxisAlignment.center;
       }
+
+      final meta = MpiDimensionMeta.forKey(_kAxisKeys[i]);
+      final poleWord = meta == null
+          ? dim.dominantPole
+          : (dim.dominantPole == meta.leftPole
+              ? meta.leftWord
+              : meta.rightWord);
 
       return Positioned(
         left: left,
@@ -173,24 +180,18 @@ class _MpiRadarChartState extends State<MpiRadarChart>
               _kAxisLabels[i],
               style: GoogleFonts.poppins(
                 color: _kAxisColors[i],
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: textAlign,
+            ),
+            const SizedBox(height: 1),
+            Text(
+              '$poleWord · ${dim.percentage.round()}%',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFFBBAADF),
                 fontSize: 10,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: textAlign,
-            ),
-            Text(
-              '${dim.dominantPole} · ${dim.percentage.round()}%',
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF9A85C8),
-                fontSize: 9,
-              ),
-              textAlign: textAlign,
-            ),
-            Text(
-              dim.strength,
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF5A4080),
-                fontSize: 8,
+                fontWeight: FontWeight.w500,
               ),
               textAlign: textAlign,
             ),
@@ -321,9 +322,9 @@ class _RadarPainter extends CustomPainter {
 
     // ── Grid rings at 25 / 50 / 75 % ─────────────────────────────────────────
     final gridPaint = Paint()
-      ..color = const Color(0xFF3D2070).withValues(alpha: 0.4)
+      ..color = const Color(0xFF5A3890).withValues(alpha: 0.55)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
+      ..strokeWidth = 1.0;
 
     for (final fraction in [0.25, 0.50, 0.75]) {
       final r = maxR * fraction;
@@ -331,19 +332,19 @@ class _RadarPainter extends CustomPainter {
         Rect.fromCenter(center: center, width: r * 2, height: r * 2),
         gridPaint,
       );
-      // Scale label to the right of the ring's top edge
+      // Scale label just inside the top-right corner of each ring
       _paintScaleLabel(
         canvas,
         '${(fraction * 100).round()}%',
-        Offset(center.dx + r + 3, center.dy - r - 1),
+        Offset(center.dx + r - 18, center.dy - r + 3),
       );
     }
 
     // ── Axis lines ────────────────────────────────────────────────────────────
     final axisPaint = Paint()
-      ..color = const Color(0xFF3D2070).withValues(alpha: 0.5)
+      ..color = const Color(0xFF5A3890).withValues(alpha: 0.65)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.8;
+      ..strokeWidth = 1.0;
 
     for (final angle in _kAxisAngles) {
       canvas.drawLine(
@@ -419,8 +420,9 @@ class _RadarPainter extends CustomPainter {
       text: TextSpan(
         text: text,
         style: const TextStyle(
-          color: Color(0xFF5A4080),
-          fontSize: 7.5,
+          color: Color(0xFF9A80C8),
+          fontSize: 9.5,
+          fontWeight: FontWeight.w600,
         ),
       ),
       textDirection: TextDirection.ltr,

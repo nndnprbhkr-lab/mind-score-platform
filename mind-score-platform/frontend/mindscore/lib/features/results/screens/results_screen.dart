@@ -522,7 +522,7 @@ class _WideLayout extends StatelessWidget {
                               ),
                               child: Center(
                                 child: MpiRadarChart(
-                                    result: mpiResult, size: 220),
+                                    result: mpiResult, size: 240),
                               ),
                             ),
                           ),
