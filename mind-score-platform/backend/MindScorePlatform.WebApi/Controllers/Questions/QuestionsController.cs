@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MindScorePlatform.Application.DTOs;
@@ -17,7 +18,10 @@ public sealed class QuestionsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetByTestId([FromQuery] Guid testId, CancellationToken cancellationToken)
     {
-        var result = await _questions.GetByTestIdAsync(testId, cancellationToken);
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                          ?? User.FindFirstValue("sub");
+        Guid? userId = Guid.TryParse(userIdClaim, out var parsed) ? parsed : null;
+        var result = await _questions.GetByTestIdAsync(testId, cancellationToken, userId);
         return Ok(result);
     }
 

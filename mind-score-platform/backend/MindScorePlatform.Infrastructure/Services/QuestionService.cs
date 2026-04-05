@@ -8,18 +8,28 @@ public sealed class QuestionService : IQuestionService
 {
     private readonly IQuestionRepository _questions;
     private readonly ITestRepository _tests;
+    private readonly IUserRepository _users;
 
-    public QuestionService(IQuestionRepository questions, ITestRepository tests)
+    public QuestionService(IQuestionRepository questions, ITestRepository tests, IUserRepository users)
     {
         _questions = questions;
         _tests = tests;
+        _users = users;
     }
 
-    public async Task<IReadOnlyList<QuestionDto>> GetByTestIdAsync(Guid testId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<QuestionDto>> GetByTestIdAsync(Guid testId, CancellationToken cancellationToken, Guid? userId = null)
     {
         _ = await _tests.GetByIdAsync(testId, cancellationToken)
             ?? throw new KeyNotFoundException($"Test {testId} not found.");
-        var questions = await _questions.GetByTestIdAsync(testId, cancellationToken);
+
+        Guid? ageBandId = null;
+        if (userId.HasValue)
+        {
+            var user = await _users.GetByIdAsync(userId.Value, cancellationToken);
+            ageBandId = user?.AgeBandId;
+        }
+
+        var questions = await _questions.GetByTestIdAsync(testId, cancellationToken, ageBandId);
         return questions.Select(q => new QuestionDto(q.Id, q.TestId, q.Text, q.Order)).ToList();
     }
 
