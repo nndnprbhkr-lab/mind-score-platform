@@ -120,6 +120,13 @@ class TestNotifier extends StateNotifier<TestState> {
               ))
           .toList();
 
+      if (questions.isEmpty) {
+        state = const TestState(
+          error: 'No questions available for your profile. Please ensure your date of birth is set correctly.',
+        );
+        return;
+      }
+
       final seconds = questions.length * 60;
       state = TestState(
         testId: testId,
@@ -138,9 +145,9 @@ class TestNotifier extends StateNotifier<TestState> {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (state.remainingSeconds <= 0) {
+      if (state.remainingSeconds <= 0 && state.questions.isNotEmpty) {
         submitTest();
-      } else {
+      } else if (state.remainingSeconds > 0) {
         state = state.copyWith(remainingSeconds: state.remainingSeconds - 1);
       }
     });
