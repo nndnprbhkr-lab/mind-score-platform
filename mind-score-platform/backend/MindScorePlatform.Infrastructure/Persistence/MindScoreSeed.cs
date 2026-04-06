@@ -111,6 +111,27 @@ public static class MindScoreSeed
         await db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS agebandid uuid;");
 
+        // ── Ensure MindScore assessment tables exist (AddMindScoreAssessment migration was empty) ──
+        await db.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS normreferences (
+                id uuid PRIMARY KEY,
+                moduleid uuid NOT NULL REFERENCES modules(id),
+                agebandid uuid NOT NULL REFERENCES agebands(id),
+                mean double precision NOT NULL,
+                standarddeviation double precision NOT NULL,
+                samplesize integer NOT NULL,
+                createdat timestamp with time zone NOT NULL
+            );");
+
+        await db.Database.ExecuteSqlRawAsync(@"
+            CREATE TABLE IF NOT EXISTS agebandmoduleweights (
+                id uuid PRIMARY KEY,
+                agebandid uuid NOT NULL REFERENCES agebands(id),
+                moduleid uuid NOT NULL REFERENCES modules(id),
+                weight double precision NOT NULL,
+                createdat timestamp with time zone NOT NULL
+            );");
+
         // ── Seed modules if missing ───────────────────────────────────────────
         var existingModuleIds = await db.Modules.Select(m => m.Id).ToListAsync();
         foreach (var (id, name, order) in ModuleDefs)
@@ -228,6 +249,8 @@ public static class MindScoreSeed
         }
 
         db.Questions.AddRange(questions);
+        await db.SaveChangesAsync();
+
         db.NormReferences.AddRange(normRefs);
         db.AgeBandModuleWeights.AddRange(weights);
         await db.SaveChangesAsync();
