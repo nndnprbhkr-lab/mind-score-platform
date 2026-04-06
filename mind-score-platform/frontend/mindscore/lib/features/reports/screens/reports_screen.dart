@@ -12,9 +12,11 @@ class ReportsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     final results = resultsState.results;
-    final scores = results
-        .map((r) => ((r.score - 1) / 4 * 100).round().clamp(0, 100))
-        .toList();
+    int _toDisplayScore(r) => r.typeCode == 'MIND_SCORE'
+        ? r.score.round().clamp(0, 100)
+        : ((r.score - 1) / 4 * 100).round().clamp(0, 100);
+
+    final scores = results.map(_toDisplayScore).toList();
     final avgScore = scores.isEmpty
         ? 0
         : (scores.reduce((a, b) => a + b) / scores.length).round();
@@ -79,9 +81,12 @@ class ReportsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               ...results.map((r) {
                 final isMpi = r.hasMpiData;
-                final label = isMpi
-                    ? '${r.emoji ?? ''} ${r.typeName ?? ''}'.trim()
-                    : '${((r.score - 1) / 4 * 100).round().clamp(0, 100)}%';
+                final isMindScore = r.typeCode == 'MIND_SCORE';
+                final label = isMindScore
+                    ? '${r.score.round()} / 100 · ${r.typeName ?? ''}'.trim()
+                    : isMpi
+                        ? '${r.emoji ?? ''} ${r.typeName ?? ''}'.trim()
+                        : '${((r.score - 1) / 4 * 100).round().clamp(0, 100)}%';
                 final typeCode = r.typeCode ?? '';
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),

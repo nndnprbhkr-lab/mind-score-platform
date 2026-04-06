@@ -75,9 +75,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final list = List<ResultModel>.from(raw);
     switch (_filter) {
       case _Filter.highScore:
-        list.sort((a, b) => _toPercent(b.score) - _toPercent(a.score));
+        list.sort((a, b) => _displayScore(b) - _displayScore(a));
       case _Filter.lowScore:
-        list.sort((a, b) => _toPercent(a.score) - _toPercent(b.score));
+        list.sort((a, b) => _displayScore(a) - _displayScore(b));
       case _Filter.all:
       case _Filter.recent:
         list.sort((a, b) => b.createdAtUtc.compareTo(a.createdAtUtc));

@@ -43,7 +43,7 @@ class ResultModel {
   final String? typeName;
   final String? emoji;
   final String? tagline;
-  final List<dynamic>? dimensionScores;
+  final dynamic dimensionScores;
   final Map<String, dynamic>? insights;
   final DateTime createdAtUtc;
 
@@ -72,7 +72,7 @@ class ResultModel {
         typeName: j['typeName'] as String?,
         emoji: j['emoji'] as String?,
         tagline: j['tagline'] as String?,
-        dimensionScores: j['dimensionScores'] as List<dynamic>?,
+        dimensionScores: j['dimensionScores'],
         insights: j['insights'] as Map<String, dynamic>?,
         createdAtUtc: DateTime.parse(j['createdAtUtc'] as String),
       );

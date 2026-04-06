@@ -22,7 +22,9 @@ class MindScoreResultsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final mindResult = MindScoreResult.fromResultModel(
       score: resultModel.score,
-      dimensionScores: resultModel.dimensionScores,
+      dimensionScores: resultModel.dimensionScores is List
+          ? resultModel.dimensionScores as List<dynamic>
+          : null,
       insights: resultModel.insights,
       typeName: resultModel.typeName ?? '',
     );
