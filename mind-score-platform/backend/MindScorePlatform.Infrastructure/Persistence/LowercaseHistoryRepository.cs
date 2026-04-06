@@ -16,9 +16,14 @@ public sealed class LowercaseHistoryRepository : NpgsqlHistoryRepository
     public LowercaseHistoryRepository(HistoryRepositoryDependencies dependencies)
         : base(dependencies) { }
 
+    // Override so EF uses "__efmigrationshistory" in all generated SQL
+    // (ExistsAsync, GetCreateScript, etc.) regardless of the options extension value.
+    protected override string TableName => "__efmigrationshistory";
+
     protected override void ConfigureTable(EntityTypeBuilder<HistoryRow> history)
     {
         base.ConfigureTable(history);
+        history.ToTable("__efmigrationshistory");
         history.Property(h => h.MigrationId).HasColumnName("migrationid");
         history.Property(h => h.ProductVersion).HasColumnName("productversion");
     }

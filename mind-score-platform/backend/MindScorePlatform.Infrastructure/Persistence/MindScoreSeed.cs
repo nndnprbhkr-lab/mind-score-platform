@@ -102,6 +102,15 @@ public static class MindScoreSeed
     {
         var now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
+        // ── Ensure users table has profile columns (idempotent) ───────────────
+        // SyncSupabaseSchema may have been marked applied without running on some envs.
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS dateofbirth timestamp with time zone;");
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS domicile text;");
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS agebandid uuid;");
+
         // ── Seed modules if missing ───────────────────────────────────────────
         var existingModuleIds = await db.Modules.Select(m => m.Id).ToListAsync();
         foreach (var (id, name, order) in ModuleDefs)

@@ -164,9 +164,9 @@ namespace MindScorePlatform.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ModuleId")
-                        .HasDatabaseName("IX_module_scores_moduleid");
+                        .HasDatabaseName("IX_modulescores_moduleid");
 
-                    b.ToTable("module_scores");
+                    b.ToTable("modulescores");
                 });
 
             modelBuilder.Entity("MindScorePlatform.Domain.Entities.NormReference", b =>
