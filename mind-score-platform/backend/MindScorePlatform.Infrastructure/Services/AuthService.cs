@@ -47,7 +47,9 @@ public sealed class AuthService : IAuthService
             Name = request.Name,
             Email = request.Email,
             PasswordHash = PasswordHasher.Hash(request.Password),
-            DateOfBirth = request.DateOfBirth,
+            DateOfBirth = request.DateOfBirth.HasValue
+                ? DateTime.SpecifyKind(request.DateOfBirth.Value, DateTimeKind.Utc)
+                : null,
             Domicile = request.Domicile,
             AgeBandId = ageBandId,
             CreatedAtUtc = DateTime.UtcNow,
