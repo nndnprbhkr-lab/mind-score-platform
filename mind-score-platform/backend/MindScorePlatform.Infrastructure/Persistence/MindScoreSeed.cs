@@ -154,6 +154,32 @@ public static class MindScoreSeed
         }
         await db.SaveChangesAsync();
 
+        // ── Clean up duplicate age bands (idempotent) ─────────────────────────
+        // Earlier deployments may have seeded random-UUID age bands alongside the
+        // deterministic c1000000-... ones.  Migrate any users pointing at a
+        // random-UUID band to the matching deterministic band, then remove the
+        // now-orphaned duplicates.
+        await db.Database.ExecuteSqlRawAsync(@"
+            UPDATE users
+            SET agebandid = canonical.id
+            FROM agebands canonical
+            JOIN agebands dup
+              ON dup.minage = canonical.minage
+             AND dup.maxage = canonical.maxage
+             AND dup.id     != canonical.id
+            WHERE canonical.id::text LIKE 'c1000000%'
+              AND users.agebandid = dup.id;");
+
+        await db.Database.ExecuteSqlRawAsync(@"
+            DELETE FROM agebands
+            WHERE id::text NOT LIKE 'c1000000%'
+              AND EXISTS (
+                  SELECT 1 FROM agebands canonical
+                  WHERE canonical.id::text LIKE 'c1000000%'
+                    AND canonical.minage = agebands.minage
+                    AND canonical.maxage = agebands.maxage
+              );");
+
         // ── Ensure the MindScore test row exists ──────────────────────────────
         var testExists = await db.Tests.AnyAsync(t => t.Id == TestId);
         if (!testExists)
