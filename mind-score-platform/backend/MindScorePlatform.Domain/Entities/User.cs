@@ -16,7 +16,7 @@ public sealed class User
 
     public DateTime CreatedAtUtc { get; set; }
 
-    public DateOnly? DateOfBirth { get; set; }
+    public DateTime? DateOfBirth { get; set; }
 
     public string? Domicile { get; set; }
 
