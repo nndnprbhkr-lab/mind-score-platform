@@ -69,7 +69,10 @@ app.UseSwaggerUI();
 app.UseExceptionHandler(errorApp => errorApp.Run(async context =>
 {
     var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
-    var message = exception?.Message ?? "An unexpected error occurred.";
+    // Unwrap DbUpdateException so the actual DB error is visible in the response
+    var message = (exception is Microsoft.EntityFrameworkCore.DbUpdateException dbe
+        ? dbe.InnerException?.Message ?? dbe.Message
+        : exception?.Message) ?? "An unexpected error occurred.";
 
     context.Response.StatusCode = exception switch
     {
