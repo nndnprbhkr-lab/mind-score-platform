@@ -97,10 +97,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   @override
   void initState() {
     super.initState();
-    // Refresh results list so Reports tab is up-to-date immediately.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(resultsProvider.notifier).load();
-    });
   }
 
   String get _duration {
@@ -181,7 +177,19 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     }
 
     if (test.result == null && !test.isLoading) {
-      final mpiResult = ref.watch(mpiResultProvider).valueOrNull;
+      final mpiAsync = ref.watch(mpiResultProvider);
+
+      // While provider is reloading keep the screen stable — don't reroute.
+      if (mpiAsync.isLoading) {
+        return const Scaffold(
+          backgroundColor: AppColors.backgroundDark,
+          body: Center(
+            child: CircularProgressIndicator(color: _kPurple),
+          ),
+        );
+      }
+
+      final mpiResult = mpiAsync.valueOrNull;
 
       if (mpiResult == null) {
         // No MPI result — show most recent MindScore if one exists
