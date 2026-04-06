@@ -39,9 +39,8 @@ public sealed class ResponseService : IResponseService
         var test = await _tests.GetByIdAsync(dto.TestId, cancellationToken)
             ?? throw new KeyNotFoundException($"Test {dto.TestId} not found.");
 
-        var alreadySubmitted = await _responses.HasUserSubmittedAsync(userId, dto.TestId, cancellationToken);
-        if (alreadySubmitted)
-            throw new InvalidOperationException("You have already submitted this test.");
+        if (!dto.Answers.Any())
+            throw new InvalidOperationException("No answers were submitted. Please complete the assessment before submitting.");
 
         // Route to MindScore engine when test is the MindScore assessment
         if (dto.TestId == MindScoreSeed.TestId)
@@ -109,7 +108,7 @@ public sealed class ResponseService : IResponseService
             CreatedAtUtc = DateTime.UtcNow,
         };
 
-        await _results.AddAsync(result, ct);
+        await _results.AddOrReplaceAsync(result, ct);
         return ToDto(result, testName);
     }
 
@@ -168,7 +167,7 @@ public sealed class ResponseService : IResponseService
             CreatedAtUtc = DateTime.UtcNow,
         };
 
-        await _results.AddAsync(result, ct);
+        await _results.AddOrReplaceAsync(result, ct);
         return ToDto(result, testName);
     }
 
