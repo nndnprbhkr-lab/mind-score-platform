@@ -9,6 +9,7 @@ import '../../../core/models/auth_models.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/results/providers/results_provider.dart';
+import '../../../features/results/screens/mind_score_results_screen.dart';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const _kPurple = Color(0xFF6B35C8);
@@ -35,6 +36,9 @@ _Type _typeFor(int percent) {
 
 int _toPercent(double score) =>
     (((score - 1) / 4) * 100).round().clamp(0, 100);
+
+int _displayScore(ResultModel r) =>
+    r.typeCode == 'MIND_SCORE' ? r.score.round() : _toPercent(r.score);
 
 String _formatDate(DateTime dt) {
   const months = [
@@ -195,6 +199,12 @@ class _MobileLayout extends StatelessWidget {
   }
 
   void _showDetail(BuildContext context, ResultModel r) {
+    if (r.typeCode == 'MIND_SCORE') {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => MindScoreResultsScreen(resultModel: r),
+      ));
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -309,6 +319,12 @@ class _WideLayout extends StatelessWidget {
   }
 
   void _showDetail(BuildContext context, ResultModel r) {
+    if (r.typeCode == 'MIND_SCORE') {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => MindScoreResultsScreen(resultModel: r),
+      ));
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -330,7 +346,7 @@ class _MobileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final percent = _toPercent(result.score);
+    final percent = _displayScore(result);
     final type = _typeFor(percent);
 
     return Material(
@@ -495,7 +511,7 @@ class _WideCardState extends State<_WideCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final percent = _toPercent(widget.result.score);
+    final percent = _displayScore(widget.result);
     final type = _typeFor(percent);
 
     return Material(
@@ -652,7 +668,7 @@ class _ResultDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final percent = _toPercent(result.score);
+    final percent = _displayScore(result);
     final type = _typeFor(percent);
 
     final topPct = switch (percent) {

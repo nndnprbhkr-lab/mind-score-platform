@@ -20,24 +20,9 @@ class MindScoreResultsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // dimensionScores is serialised as a JSON array on the backend
-    final rawDimensions = resultModel.dimensionScores;
-    List<dynamic>? moduleList;
-    if (rawDimensions != null) {
-      // The API returns dimensionScores as a plain JSON object; the array is
-      // at the top-level keys when the backend serialises a List<T> as an object
-      // with integer string keys ("0", "1", ...), or as a nested "modules" key.
-      if (rawDimensions.containsKey('modules')) {
-        moduleList = rawDimensions['modules'] as List<dynamic>?;
-      } else {
-        // Rebuild list from integer-keyed map (API quirk)
-        moduleList = rawDimensions.values.toList();
-      }
-    }
-
     final mindResult = MindScoreResult.fromResultModel(
       score: resultModel.score,
-      dimensionScores: moduleList,
+      dimensionScores: resultModel.dimensionScores,
       insights: resultModel.insights,
       typeName: resultModel.typeName ?? '',
     );
