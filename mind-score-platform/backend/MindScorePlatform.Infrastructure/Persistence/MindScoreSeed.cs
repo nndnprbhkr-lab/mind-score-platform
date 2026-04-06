@@ -6,31 +6,32 @@ namespace MindScorePlatform.Infrastructure.Persistence;
 /// <summary>
 /// Runtime seed for MindScore assessment data.
 /// Called from Program.cs after db.Database.Migrate().
-/// Idempotent — skips if questions already exist for the MindScore test.
+/// Uses whatever UUIDs already exist in agebands/modules tables (no hardcoded IDs).
+/// Re-seeds questions whenever their AgeBandIds no longer match the current agebands table.
 /// </summary>
 public static class MindScoreSeed
 {
     internal static readonly Guid TestId = new("a1000000-0000-0000-0000-000000000001");
 
-    /// <summary>Module definitions — deterministic GUIDs so re-seeding is safe.</summary>
-    private static readonly (Guid id, string name, int order)[] ModuleDefs =
+    /// <summary>Module names and display order only — no hardcoded UUIDs.</summary>
+    private static readonly (string name, int order)[] ModuleNames =
     [
-        (new Guid("b1000000-0000-0000-0000-000000000001"), "Cognitive",  1),
-        (new Guid("b1000000-0000-0000-0000-000000000002"), "Emotional",  2),
-        (new Guid("b1000000-0000-0000-0000-000000000003"), "Focus",      3),
-        (new Guid("b1000000-0000-0000-0000-000000000004"), "Decision",   4),
-        (new Guid("b1000000-0000-0000-0000-000000000005"), "Resilience", 5),
+        ("Cognitive",  1),
+        ("Emotional",  2),
+        ("Focus",      3),
+        ("Decision",   4),
+        ("Resilience", 5),
     ];
 
-    /// <summary>Age band definitions — deterministic GUIDs so re-seeding is safe.</summary>
-    private static readonly (Guid id, string name, int min, int max, int order)[] AgeBandDefs =
+    /// <summary>Age band definitions — names/ranges only, no hardcoded UUIDs.</summary>
+    private static readonly (string name, int min, int max, int order)[] AgeBandRanges =
     [
-        (new Guid("c1000000-0000-0000-0000-000000000001"), "Child (6-12)",          6,  12, 1),
-        (new Guid("c1000000-0000-0000-0000-000000000002"), "Teen (13-17)",          13, 17, 2),
-        (new Guid("c1000000-0000-0000-0000-000000000003"), "Young Adult (18-24)",   18, 24, 3),
-        (new Guid("c1000000-0000-0000-0000-000000000004"), "Adult (25-44)",         25, 44, 4),
-        (new Guid("c1000000-0000-0000-0000-000000000005"), "Mature Adult (45-59)",  45, 59, 5),
-        (new Guid("c1000000-0000-0000-0000-000000000006"), "Senior Adult (60+)",    60, 99, 6),
+        ("Child (6-12)",         6,  12, 1),
+        ("Teen (13-17)",        13,  17, 2),
+        ("Young Adult (18-24)", 18,  24, 3),
+        ("Adult (25-44)",       25,  44, 4),
+        ("Mature Adult (45-59)",45,  59, 5),
+        ("Senior Adult (60+)",  60,  99, 6),
     ];
 
     // ── Per-module questions (6 per module, all neutral to age band) ──────────
@@ -100,10 +101,9 @@ public static class MindScoreSeed
 
     public static async Task SeedAsync(AppDbContext db)
     {
-        var now = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var now = DateTime.UtcNow;
 
-        // ── Ensure users table has profile columns (idempotent) ───────────────
-        // SyncSupabaseSchema may have been marked applied without running on some envs.
+        // ── Ensure schema columns exist (idempotent) ──────────────────────────
         await db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS dateofbirth timestamp with time zone;");
         await db.Database.ExecuteSqlRawAsync(
@@ -111,7 +111,7 @@ public static class MindScoreSeed
         await db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS agebandid uuid;");
 
-        // ── Ensure MindScore assessment tables exist (AddMindScoreAssessment migration was empty) ──
+        // ── Ensure MindScore tables exist (migration was left empty) ──────────
         await db.Database.ExecuteSqlRawAsync(@"
             CREATE TABLE IF NOT EXISTS normreferences (
                 id uuid PRIMARY KEY,
@@ -122,7 +122,6 @@ public static class MindScoreSeed
                 samplesize integer NOT NULL,
                 createdat timestamp with time zone NOT NULL
             );");
-
         await db.Database.ExecuteSqlRawAsync(@"
             CREATE TABLE IF NOT EXISTS agebandmoduleweights (
                 id uuid PRIMARY KEY,
@@ -132,78 +131,94 @@ public static class MindScoreSeed
                 createdat timestamp with time zone NOT NULL
             );");
 
-        // ── Seed modules if missing ───────────────────────────────────────────
-        var existingModuleIds = await db.Modules.Select(m => m.Id).ToListAsync();
-        foreach (var (id, name, order) in ModuleDefs)
+        // ── Modules: insert by name if missing, then read actual IDs ─────────
+        var moduleNameSet = ModuleNames.Select(m => m.name).ToHashSet();
+        var existingModuleNames = await db.Modules
+            .Where(m => moduleNameSet.Contains(m.Name))
+            .Select(m => m.Name)
+            .ToListAsync();
+        foreach (var (name, order) in ModuleNames)
         {
-            if (!existingModuleIds.Contains(id))
-            {
-                db.Modules.Add(new Module { Id = id, Name = name, DisplayOrder = order, IsActive = true, CreatedAt = now });
-            }
+            if (!existingModuleNames.Contains(name))
+                db.Modules.Add(new Module { Id = Guid.NewGuid(), Name = name, DisplayOrder = order, IsActive = true, CreatedAt = now });
         }
         await db.SaveChangesAsync();
 
-        // ── Seed age bands if missing ─────────────────────────────────────────
-        var existingAgeBandIds = await db.AgeBands.Select(a => a.Id).ToListAsync();
-        foreach (var (id, name, min, max, order) in AgeBandDefs)
-        {
-            if (!existingAgeBandIds.Contains(id))
-            {
-                db.AgeBands.Add(new AgeBand { Id = id, Name = name, MinAge = min, MaxAge = max, DisplayOrder = order, IsActive = true, CreatedAt = now });
-            }
-        }
-        await db.SaveChangesAsync();
+        var moduleIdByName = await db.Modules
+            .Where(m => moduleNameSet.Contains(m.Name))
+            .ToDictionaryAsync(m => m.Name, m => m.Id);
 
-        // ── Clean up duplicate age bands (idempotent) ─────────────────────────
-        // Earlier deployments may have seeded random-UUID age bands alongside the
-        // deterministic c1000000-... ones.  Migrate any users pointing at a
-        // random-UUID band to the matching deterministic band, then remove the
-        // now-orphaned duplicates.
-        await db.Database.ExecuteSqlRawAsync(@"
-            UPDATE users
-            SET agebandid = canonical.id
-            FROM agebands canonical
-            JOIN agebands dup
-              ON dup.minage = canonical.minage
-             AND dup.maxage = canonical.maxage
-             AND dup.id     != canonical.id
-            WHERE canonical.id::text LIKE 'c1000000%'
-              AND users.agebandid = dup.id;");
-
+        // ── Age bands: deduplicate by (MinAge, MaxAge), keep oldest per range ─
+        // Remove all but the oldest row for each (minage, maxage) pair.
         await db.Database.ExecuteSqlRawAsync(@"
             DELETE FROM agebands
-            WHERE id::text NOT LIKE 'c1000000%'
-              AND EXISTS (
-                  SELECT 1 FROM agebands canonical
-                  WHERE canonical.id::text LIKE 'c1000000%'
-                    AND canonical.minage = agebands.minage
-                    AND canonical.maxage = agebands.maxage
-              );");
+            WHERE id IN (
+                SELECT id FROM (
+                    SELECT id,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY minage, maxage
+                               ORDER BY createdat ASC NULLS LAST, id ASC
+                           ) AS rn
+                    FROM agebands
+                ) ranked
+                WHERE rn > 1
+            );");
 
-        // ── Ensure the MindScore test row exists ──────────────────────────────
-        var testExists = await db.Tests.AnyAsync(t => t.Id == TestId);
-        if (!testExists)
+        // Migrate any users that pointed at a deleted duplicate to the surviving row.
+        await db.Database.ExecuteSqlRawAsync(@"
+            UPDATE users u
+            SET agebandid = survivor.id
+            FROM (
+                SELECT DISTINCT ON (minage, maxage) id, minage, maxage
+                FROM agebands
+                ORDER BY minage, maxage, createdat ASC NULLS LAST, id ASC
+            ) survivor
+            WHERE u.agebandid IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM agebands ab WHERE ab.id = u.agebandid);");
+
+        // Insert any age band ranges that are still missing after deduplication.
+        for (int i = 0; i < AgeBandRanges.Length; i++)
         {
-            db.Tests.Add(new Test
-            {
-                Id = TestId,
-                Name = "MindScore Assessment",
-                CreatedAtUtc = now,
-            });
+            var (name, min, max, order) = AgeBandRanges[i];
+            if (!await db.AgeBands.AnyAsync(a => a.MinAge == min && a.MaxAge == max))
+                db.AgeBands.Add(new AgeBand { Id = Guid.NewGuid(), Name = name, MinAge = min, MaxAge = max, DisplayOrder = order, IsActive = true, CreatedAt = now });
+        }
+        await db.SaveChangesAsync();
+
+        // Read the single surviving ID for each age band range.
+        var ageBandIds = new Guid[AgeBandRanges.Length];
+        for (int i = 0; i < AgeBandRanges.Length; i++)
+        {
+            var (_, min, max, _) = AgeBandRanges[i];
+            ageBandIds[i] = await db.AgeBands
+                .Where(a => a.MinAge == min && a.MaxAge == max)
+                .Select(a => a.Id)
+                .FirstAsync();
+        }
+
+        // ── MindScore test row ────────────────────────────────────────────────
+        if (!await db.Tests.AnyAsync(t => t.Id == TestId))
+        {
+            db.Tests.Add(new Test { Id = TestId, Name = "MindScore Assessment", CreatedAtUtc = now });
             await db.SaveChangesAsync();
         }
 
-        // Skip if questions already seeded
-        var alreadySeeded = await db.Questions.AnyAsync(q => q.TestId == TestId);
-        if (alreadySeeded) return;
+        // ── Questions: re-seed whenever AgeBandIds are stale ─────────────────
+        var validAgeBandIdSet = ageBandIds.ToHashSet();
+        var existingQuestions = await db.Questions.Where(q => q.TestId == TestId).ToListAsync();
+        bool questionsValid = existingQuestions.Count > 0
+            && existingQuestions.All(q => q.AgeBandId.HasValue && validAgeBandIdSet.Contains(q.AgeBandId.Value));
 
-        // Build lookup maps from the deterministic IDs
-        var modules = ModuleDefs.ToDictionary(m => m.name, m => m.id);
-        var ageBandList = AgeBandDefs.Select(a => (a.id, a.order)).ToList();
+        if (questionsValid) return;
 
-        var questions = new List<Question>();
-        var normRefs = new List<NormReference>();
-        var weights = new List<AgeBandModuleWeight>();
+        // Remove stale questions and all norm refs / weights (they reference the old IDs).
+        if (existingQuestions.Count > 0)
+        {
+            db.Questions.RemoveRange(existingQuestions);
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM normreferences;");
+            await db.Database.ExecuteSqlRawAsync("DELETE FROM agebandmoduleweights;");
+            await db.SaveChangesAsync();
+        }
 
         var moduleData = new (string name, (string code, string text, bool reverse)[] qs)[]
         {
@@ -214,61 +229,61 @@ public static class MindScoreSeed
             ("Resilience", ResilienceQuestions),
         };
 
+        var questions = new List<Question>();
+        var normRefs  = new List<NormReference>();
+        var weights   = new List<AgeBandModuleWeight>();
         int globalOrder = 1;
 
         for (int mi = 0; mi < moduleData.Length; mi++)
         {
             var (moduleName, qs) = moduleData[mi];
-            var moduleId = modules[moduleName];
+            var moduleId = moduleIdByName[moduleName];
 
             for (int qi = 0; qi < qs.Length; qi++)
             {
                 var (code, text, reverse) = qs[qi];
 
-                // One question row per age band (6 × 5 = 30 questions per module → 180 total)
-                foreach (var ab in ageBandList)
+                for (int abi = 0; abi < ageBandIds.Length; abi++)
                 {
                     questions.Add(new Question
                     {
-                        Id = Guid.NewGuid(),
-                        TestId = TestId,
-                        Code = $"{code}_AB{ab.order}",
-                        Order = globalOrder++,
-                        Text = text,
-                        ModuleId = moduleId,
-                        AgeBandId = ab.id,
+                        Id             = Guid.NewGuid(),
+                        TestId         = TestId,
+                        Code           = $"{code}_AB{abi + 1}",
+                        Order          = globalOrder++,
+                        Text           = text,
+                        ModuleId       = moduleId,
+                        AgeBandId      = ageBandIds[abi],
                         IsReverseScored = reverse,
-                        Weight = 1.0m,
-                        Version = 1,
-                        CreatedAtUtc = now,
+                        Weight         = 1.0m,
+                        Version        = 1,
+                        CreatedAtUtc   = now,
                     });
                 }
             }
 
-            // Norm references: one per module × age band (mean=50, sd=15, n=100)
-            foreach (var ab in ageBandList)
+            foreach (var abId in ageBandIds)
             {
                 normRefs.Add(new NormReference
                 {
-                    Id = Guid.NewGuid(),
-                    ModuleId = moduleId,
-                    AgeBandId = ab.id,
-                    Mean = 50.0,
+                    Id                = Guid.NewGuid(),
+                    ModuleId          = moduleId,
+                    AgeBandId         = abId,
+                    Mean              = 50.0,
                     StandardDeviation = 15.0,
-                    SampleSize = 100,
-                    CreatedAt = now,
+                    SampleSize        = 100,
+                    CreatedAt         = now,
                 });
             }
 
-            // Age-band module weights
-            for (int abi = 0; abi < ageBandList.Count; abi++)
+            for (int abi = 0; abi < ageBandIds.Length; abi++)
             {
                 weights.Add(new AgeBandModuleWeight
                 {
-                    Id = Guid.NewGuid(),
-                    AgeBandId = ageBandList[abi].id,
-                    ModuleId = moduleId,
-                    Weight = WeightsByAgeBand[abi][mi],
+                    Id        = Guid.NewGuid(),
+                    AgeBandId = ageBandIds[abi],
+                    ModuleId  = moduleId,
+                    Weight    = WeightsByAgeBand[abi][mi],
                     CreatedAt = now,
                 });
             }

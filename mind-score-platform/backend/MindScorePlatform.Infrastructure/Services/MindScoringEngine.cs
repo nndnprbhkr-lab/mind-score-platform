@@ -29,44 +29,29 @@ public sealed class MindScoringEngine : IMindScoringEngine
         IReadOnlyList<(Guid QuestionId, int Value)> responses,
         CancellationToken cancellationToken = default)
     {
-        // Resolve all age band IDs with the same age range as the user's band.
-        // This handles duplicate/mismatched IDs (random-UUID rows vs deterministic c1000000-... seeded rows).
-        var ageBand = await _db.AgeBands.FindAsync([ageBandId], cancellationToken);
-        var ageBandName = ageBand?.Name ?? "Unknown";
-
-        List<Guid> equivalentAgeBandIds;
-        if (ageBand is not null)
-        {
-            equivalentAgeBandIds = await _db.AgeBands
-                .Where(a => a.MinAge == ageBand.MinAge && a.MaxAge == ageBand.MaxAge)
-                .Select(a => a.Id)
-                .ToListAsync(cancellationToken);
-        }
-        else
-        {
-            equivalentAgeBandIds = [ageBandId];
-        }
-
         // Load questions for this age band (with module info)
         var questionIds = responses.Select(r => r.QuestionId).ToHashSet();
         var questions = await _db.Questions
             .Include(q => q.Module)
             .Where(q => q.TestId == MindScoreSeed.TestId
-                     && q.AgeBandId.HasValue && equivalentAgeBandIds.Contains(q.AgeBandId.Value)
+                     && q.AgeBandId == ageBandId
                      && questionIds.Contains(q.Id))
             .ToListAsync(cancellationToken);
 
         // Load norm references for this age band
         var norms = await _db.NormReferences
             .Include(n => n.Module)
-            .Where(n => equivalentAgeBandIds.Contains(n.AgeBandId))
+            .Where(n => n.AgeBandId == ageBandId)
             .ToListAsync(cancellationToken);
 
         // Load weights for this age band
         var weightRows = await _db.AgeBandModuleWeights
             .Include(w => w.Module)
-            .Where(w => equivalentAgeBandIds.Contains(w.AgeBandId))
+            .Where(w => w.AgeBandId == ageBandId)
             .ToListAsync(cancellationToken);
+
+        var ageBand = await _db.AgeBands.FindAsync([ageBandId], cancellationToken);
+        var ageBandName = ageBand?.Name ?? "Unknown";
 
         var responseMap = responses.ToDictionary(r => r.QuestionId, r => r.Value);
 
