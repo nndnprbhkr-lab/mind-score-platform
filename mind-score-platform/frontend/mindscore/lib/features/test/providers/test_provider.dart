@@ -36,6 +36,8 @@ class TestState {
   final String? error;
   final ResultModel? result;
   final Map<String, dynamic>? rawResultJson;
+  final DateTime? startedAt;
+  final int? durationSeconds;
 
   const TestState({
     this.testId = '',
@@ -48,6 +50,8 @@ class TestState {
     this.error,
     this.result,
     this.rawResultJson,
+    this.startedAt,
+    this.durationSeconds,
   });
 
   double get progress =>
@@ -71,6 +75,8 @@ class TestState {
     String? error,
     ResultModel? result,
     Map<String, dynamic>? rawResultJson,
+    DateTime? startedAt,
+    int? durationSeconds,
   }) {
     return TestState(
       testId: testId ?? this.testId,
@@ -83,6 +89,8 @@ class TestState {
       error: error,
       result: result ?? this.result,
       rawResultJson: rawResultJson ?? this.rawResultJson,
+      startedAt: startedAt ?? this.startedAt,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
     );
   }
 }
@@ -133,6 +141,7 @@ class TestNotifier extends StateNotifier<TestState> {
         testName: testName,
         questions: questions,
         remainingSeconds: seconds,
+        startedAt: DateTime.now(),
       );
       _startTimer();
     } on ApiException catch (e) {
@@ -196,10 +205,14 @@ class TestNotifier extends StateNotifier<TestState> {
         auth: true,
       );
       final result = ResultModel.fromJson(json);
+      final elapsed = state.startedAt != null
+          ? DateTime.now().difference(state.startedAt!).inSeconds
+          : null;
       state = state.copyWith(
         isLoading: false,
         result: result,
         rawResultJson: json,
+        durationSeconds: elapsed,
       );
       return result;
     } on ApiException catch (e) {

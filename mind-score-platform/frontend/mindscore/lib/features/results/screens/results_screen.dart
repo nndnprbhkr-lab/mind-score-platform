@@ -104,11 +104,10 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 
   String get _duration {
-    final test = ref.read(testProvider);
-    final total = test.questions.length * 60;
-    final taken = total - test.remainingSeconds;
-    final m = taken ~/ 60;
-    final s = taken % 60;
+    final secs = ref.read(testProvider).durationSeconds;
+    if (secs == null || secs <= 0) return '—';
+    final m = secs ~/ 60;
+    final s = secs % 60;
     if (m == 0) return '${s}s';
     return s == 0 ? '${m}m' : '${m}m ${s}s';
   }
