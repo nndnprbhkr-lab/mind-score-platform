@@ -639,9 +639,12 @@ class _RegularTestCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primaryMid,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3D1D80), Color(0xFF6B35C8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Row(
         children: [
@@ -653,13 +656,13 @@ class _RegularTestCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.15),
+                    color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'Psychology',
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.accentLight,
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -668,7 +671,7 @@ class _RegularTestCard extends StatelessWidget {
                 Text(
                   test.name,
                   style: theme.textTheme.titleSmall?.copyWith(
-                    color: AppColors.textPrimary,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -676,7 +679,7 @@ class _RegularTestCard extends StatelessWidget {
                 Text(
                   '${test.questionCount} questions · 3–5 min',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Colors.white.withValues(alpha: 0.72),
                   ),
                 ),
               ],
@@ -686,8 +689,8 @@ class _RegularTestCard extends StatelessWidget {
           ElevatedButton(
             onPressed: onStart,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.primaryDark,
+              backgroundColor: AppColors.highlight,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(
                   horizontal: 18, vertical: 10),
               shape: RoundedRectangleBorder(
@@ -696,7 +699,7 @@ class _RegularTestCard extends StatelessWidget {
               textStyle: theme.textTheme.labelMedium
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
-            child: const Text('Start'),
+            child: const Text('Start Now'),
           ),
         ],
       ),
@@ -765,18 +768,12 @@ class _GridTestCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: isFeatured
-            ? const LinearGradient(
-                colors: [Color(0xFF3D1D80), Color(0xFF6B35C8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        color: isFeatured ? null : AppColors.primaryMid,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3D1D80), Color(0xFF6B35C8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(14),
-        border: isFeatured
-            ? null
-            : Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -787,16 +784,13 @@ class _GridTestCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isFeatured
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : AppColors.accent.withValues(alpha: 0.15),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   isFeatured ? 'FEATURED' : 'Psychology',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color:
-                        isFeatured ? Colors.white : AppColors.accentLight,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                     letterSpacing: isFeatured ? 0.8 : 0,
                   ),
@@ -817,9 +811,7 @@ class _GridTestCard extends StatelessWidget {
           Text(
             '${test.questionCount} questions · 3–5 min',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: isFeatured
-                  ? Colors.white.withValues(alpha: 0.72)
-                  : AppColors.textSecondary,
+              color: Colors.white.withValues(alpha: 0.72),
             ),
           ),
           const SizedBox(height: 16),
@@ -828,19 +820,16 @@ class _GridTestCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onStart,
               style: ElevatedButton.styleFrom(
-                backgroundColor: isFeatured
-                    ? AppColors.highlight
-                    : Colors.white,
-                foregroundColor:
-                    isFeatured ? Colors.white : AppColors.primaryDark,
+                backgroundColor: AppColors.highlight,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
                 elevation: 0,
               ),
-              child: Text(
-                isFeatured ? 'Start Now' : 'Start',
-                style: const TextStyle(fontWeight: FontWeight.w700),
+              child: const Text(
+                'Start Now',
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
