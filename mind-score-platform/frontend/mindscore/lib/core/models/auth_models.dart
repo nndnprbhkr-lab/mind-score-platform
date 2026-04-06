@@ -61,7 +61,7 @@ class ResultModel {
     required this.createdAtUtc,
   });
 
-  bool get hasMpiData => typeCode != null && typeCode!.isNotEmpty;
+  bool get hasMpiData => typeCode != null && typeCode!.isNotEmpty && typeCode != 'MIND_SCORE';
 
   factory ResultModel.fromJson(Map<String, dynamic> j) => ResultModel(
         id: j['id'] as String,
