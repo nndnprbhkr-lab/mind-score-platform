@@ -182,18 +182,20 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     }
 
     if (test.result == null && !test.isLoading) {
-      // Fall back to most recent MindScore result from history
-      final recentMindScore = ref
-          .watch(resultsProvider)
-          .results
-          .where((r) => r.typeCode == 'MIND_SCORE')
-          .firstOrNull;
-      if (recentMindScore != null) {
-        return MindScoreResultsScreen(resultModel: recentMindScore);
-      }
-
       final mpiResult = ref.watch(mpiResultProvider).valueOrNull;
+
       if (mpiResult == null) {
+        // No MPI result — show most recent MindScore if one exists
+        final recentMindScore = ref
+            .watch(resultsProvider)
+            .results
+            .where((r) => r.typeCode == 'MIND_SCORE')
+            .firstOrNull;
+        if (recentMindScore != null) {
+          return MindScoreResultsScreen(resultModel: recentMindScore);
+        }
+
+        // No results at all
         return Scaffold(
           backgroundColor: AppColors.backgroundDark,
           body: Center(

@@ -190,7 +190,7 @@ class _BannerRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  result.typeName,
+                  result.typeCode,
                   style: const TextStyle(
                     fontSize: 12,
                     color: _kPink,
