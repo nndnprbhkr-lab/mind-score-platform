@@ -43,7 +43,7 @@ public sealed class ResponseService : IResponseService
             throw new InvalidOperationException("No answers were submitted. Please complete the assessment before submitting.");
 
         // Route to MindScore engine when test is the MindScore assessment
-        if (dto.TestId == MindScoreSeed.TestId)
+        if (test.Name == "MindScore Assessment")
             return await SubmitMindScoreAsync(userId, dto, test.Name, cancellationToken);
 
         return await SubmitMpiAsync(userId, dto, test.Name, cancellationToken);

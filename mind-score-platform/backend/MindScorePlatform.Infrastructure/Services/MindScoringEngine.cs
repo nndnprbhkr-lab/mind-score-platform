@@ -33,8 +33,7 @@ public sealed class MindScoringEngine : IMindScoringEngine
         var questionIds = responses.Select(r => r.QuestionId).ToHashSet();
         var questions = await _db.Questions
             .Include(q => q.Module)
-            .Where(q => q.TestId == MindScoreSeed.TestId
-                     && q.AgeBandId == ageBandId
+            .Where(q => q.AgeBandId == ageBandId
                      && questionIds.Contains(q.Id))
             .ToListAsync(cancellationToken);
 
