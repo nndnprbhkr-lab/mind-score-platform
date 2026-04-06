@@ -69,6 +69,7 @@ public sealed class ResponseService : IResponseService
             })
             .ToList();
 
+        await _responses.DeleteByUserAndQuestionsAsync(userId, questionMap.Keys, ct);
         await _responses.AddRangeAsync(responses, ct);
 
         var scoringInputs = dto.Answers
@@ -133,6 +134,7 @@ public sealed class ResponseService : IResponseService
             })
             .ToList();
 
+        await _responses.DeleteByUserAndQuestionsAsync(userId, questionMap.Keys, ct);
         await _responses.AddRangeAsync(responses, ct);
 
         // Resolve user's age band

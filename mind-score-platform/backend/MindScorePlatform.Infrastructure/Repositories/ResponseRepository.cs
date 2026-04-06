@@ -41,4 +41,13 @@ public sealed class ResponseRepository : IResponseRepository
         _db.Responses.AddRange(responses);
         await _db.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task DeleteByUserAndQuestionsAsync(Guid userId, IEnumerable<Guid> questionIds, CancellationToken cancellationToken)
+    {
+        var ids = questionIds.ToList();
+        if (ids.Count == 0) return;
+        await _db.Responses
+            .Where(r => r.UserId == userId && ids.Contains(r.QuestionId))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

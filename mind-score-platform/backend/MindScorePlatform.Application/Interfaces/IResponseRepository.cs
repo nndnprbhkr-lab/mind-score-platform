@@ -6,5 +6,6 @@ public interface IResponseRepository
 {
     Task<IReadOnlyList<Response>> GetByUserAndTestAsync(Guid userId, Guid testId, CancellationToken cancellationToken);
     Task AddRangeAsync(IEnumerable<Response> responses, CancellationToken cancellationToken);
+    Task DeleteByUserAndQuestionsAsync(Guid userId, IEnumerable<Guid> questionIds, CancellationToken cancellationToken);
     Task<bool> HasUserSubmittedAsync(Guid userId, Guid testId, CancellationToken cancellationToken);
 }

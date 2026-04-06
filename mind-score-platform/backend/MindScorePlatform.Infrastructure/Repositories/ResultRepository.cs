@@ -31,10 +31,32 @@ public sealed class ResultRepository : IResultRepository
 
     public async Task AddOrReplaceAsync(Result result, CancellationToken cancellationToken)
     {
-        var existing = await GetByUserAndTestAsync(result.UserId, result.TestId, cancellationToken);
-        if (existing is not null)
-            _db.Results.Remove(existing);
-        _db.Results.Add(result);
-        await _db.SaveChangesAsync(cancellationToken);
+        await _db.Database.ExecuteSqlRawAsync(@"
+            INSERT INTO results
+                (id, userid, testid, score, personalitytype, personalityname,
+                 personalityemoji, personalitytagline, dimensionscoresjson, insightsjson, createdatutc)
+            VALUES
+                ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})
+            ON CONFLICT (userid, testid) DO UPDATE SET
+                id                  = EXCLUDED.id,
+                score               = EXCLUDED.score,
+                personalitytype     = EXCLUDED.personalitytype,
+                personalityname     = EXCLUDED.personalityname,
+                personalityemoji    = EXCLUDED.personalityemoji,
+                personalitytagline  = EXCLUDED.personalitytagline,
+                dimensionscoresjson = EXCLUDED.dimensionscoresjson,
+                insightsjson        = EXCLUDED.insightsjson,
+                createdatutc        = EXCLUDED.createdatutc",
+            result.Id,
+            result.UserId,
+            result.TestId,
+            result.Score,
+            result.PersonalityType,
+            result.PersonalityName,
+            result.PersonalityEmoji,
+            result.PersonalityTagline,
+            result.DimensionScoresJson,
+            result.InsightsJson,
+            result.CreatedAtUtc);
     }
 }
