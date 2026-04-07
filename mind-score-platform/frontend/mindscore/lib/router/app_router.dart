@@ -11,6 +11,7 @@ import '../features/reports/screens/reports_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
 import '../features/test/screens/test_screen.dart';
 import '../features/results/screens/results_screen.dart';
+import '../features/results/screens/mind_score_results_screen.dart';
 import '../features/admin/screens/admin_screen.dart';
 import '../widgets/nav/app_shell.dart';
 
@@ -53,6 +54,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.results,
         pageBuilder: (ctx, state) => _fadePage(const ResultsScreen(), state),
+      ),
+      GoRoute(
+        path: AppRoutes.mindScoreResults,
+        pageBuilder: (ctx, state) =>
+            _fadePage(const MindScoreResultsScreen(), state),
       ),
 
       // Admin — no shell

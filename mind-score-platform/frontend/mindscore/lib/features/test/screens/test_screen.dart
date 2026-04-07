@@ -82,7 +82,12 @@ class _TestScreenState extends ConsumerState<TestScreen> {
     );
     if (confirmed == true && mounted) {
       await ref.read(testProvider.notifier).submitTest();
-      if (mounted) context.go(AppRoutes.results);
+      if (mounted) {
+        final tc = ref.read(testProvider).result?.typeCode;
+        context.go(
+          tc == 'MIND_SCORE' ? AppRoutes.mindScoreResults : AppRoutes.results,
+        );
+      }
     }
   }
 

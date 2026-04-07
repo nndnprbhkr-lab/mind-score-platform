@@ -13,9 +13,7 @@ import '../../../core/utils/responsive.dart';
 import '../../../features/test/providers/test_provider.dart';
 import '../../../core/models/mpi_models.dart';
 import '../../../features/results/providers/mpi_result_provider.dart';
-import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_legend_header.dart';
-import 'mind_score_results_screen.dart';
 import '../../../widgets/mpi/mpi_radar_chart.dart';
 import '../../../widgets/mpi/mpi_dimension_row.dart';
 import '../../../widgets/mpi/mpi_action_plan_card.dart';
@@ -170,13 +168,10 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   @override
   Widget build(BuildContext context) {
     final test = ref.watch(testProvider);
+    // Treat any stale MIND_SCORE result as absent — /results is MPI-only.
+    final result = test.result?.typeCode == 'MIND_SCORE' ? null : test.result;
 
-    // Route MindScore results to the dedicated screen
-    if (test.result?.typeCode == 'MIND_SCORE') {
-      return MindScoreResultsScreen(resultModel: test.result!);
-    }
-
-    if (test.result == null && !test.isLoading) {
+    if (result == null && !test.isLoading) {
       final mpiAsync = ref.watch(mpiResultProvider);
 
       // While provider is reloading keep the screen stable — don't reroute.
@@ -192,17 +187,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       final mpiResult = mpiAsync.valueOrNull;
 
       if (mpiResult == null) {
-        // No MPI result — show most recent MindScore if one exists
-        final recentMindScore = ref
-            .watch(resultsProvider)
-            .results
-            .where((r) => r.typeCode == 'MIND_SCORE')
-            .firstOrNull;
-        if (recentMindScore != null) {
-          return MindScoreResultsScreen(resultModel: recentMindScore);
-        }
-
-        // No results at all
+        // No MPI result at all
         return Scaffold(
           backgroundColor: AppColors.backgroundDark,
           body: Center(
@@ -259,7 +244,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       );
     }
 
-    final result = test.result;
     final mpiData = result != null
         ? _MpiDisplayData.fromResult(result)
         : const _MpiDisplayData(

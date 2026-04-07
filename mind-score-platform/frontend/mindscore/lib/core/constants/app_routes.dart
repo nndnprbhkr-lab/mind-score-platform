@@ -10,5 +10,6 @@ class AppRoutes {
   static const String test = '/test/:testId';
   static String testWithId(String id) => '/test/$id';
   static const String results = '/results';
+  static const String mindScoreResults = '/results/mindscore';
   static const String adminPanel = '/admin';
 }
