@@ -113,10 +113,14 @@ class RegisterRequest {
 
 class GuestLoginRequest {
   final String name;
+  final DateTime? dateOfBirth;
 
-  const GuestLoginRequest({required this.name});
+  const GuestLoginRequest({required this.name, this.dateOfBirth});
 
-  Map<String, dynamic> toJson() => {'name': name};
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        if (dateOfBirth != null) 'dateOfBirth': dateOfBirth!.toIso8601String(),
+      };
 }
 
 class AuthResponse {
@@ -126,6 +130,7 @@ class AuthResponse {
   final String token;
   final bool isAdmin;
   final bool isGuest;
+  final bool hasDob;
 
   const AuthResponse({
     required this.userId,
@@ -134,6 +139,7 @@ class AuthResponse {
     required this.token,
     this.isAdmin = false,
     this.isGuest = false,
+    this.hasDob = false,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -144,6 +150,7 @@ class AuthResponse {
       token: json['accessToken'] as String,
       isAdmin: json['isAdmin'] as bool? ?? false,
       isGuest: json['isGuest'] as bool? ?? false,
+      hasDob: json['hasDob'] as bool? ?? false,
     );
   }
 }

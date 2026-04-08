@@ -45,74 +45,158 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _onGuestTap() async {
     final nameCtrl = TextEditingController();
+    DateTime? selectedDob;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E0F3C),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Continue as Guest',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Enter your name to get started.',
-              style: TextStyle(color: Color(0xFF9a85c8), fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: nameCtrl,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Your name',
-                hintStyle: const TextStyle(color: Color(0xFF6B5A9E)),
-                filled: true,
-                fillColor: const Color(0xFF2A1850),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF3D2070)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final dobLabel = selectedDob != null
+              ? '${selectedDob!.day.toString().padLeft(2, '0')}/'
+                '${selectedDob!.month.toString().padLeft(2, '0')}/'
+                '${selectedDob!.year}'
+              : 'Select date of birth';
+
+          Future<void> pickDob() async {
+            final now = DateTime.now();
+            final picked = await showDatePicker(
+              context: ctx,
+              initialDate: selectedDob ?? DateTime(now.year - 25),
+              firstDate: DateTime(now.year - 100),
+              lastDate: DateTime(now.year - 5),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  colorScheme: const ColorScheme.dark(
+                    primary: Color(0xFF6B35C8),
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF1E0F3C),
+                    onSurface: Colors.white,
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF3D2070)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFF6B35C8)),
-                ),
+                child: child!,
               ),
+            );
+            if (picked != null) {
+              setDialogState(() => selectedDob = picked);
+            }
+          }
+
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1E0F3C),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text(
+              'Continue as Guest',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF9a85c8))),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6B35C8),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Enter your name to get started.',
+                  style: TextStyle(color: Color(0xFF9a85c8), fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Your name',
+                    hintStyle: const TextStyle(color: Color(0xFF6B5A9E)),
+                    filled: true,
+                    fillColor: const Color(0xFF2A1850),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF3D2070)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF3D2070)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Color(0xFF6B35C8)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Date of birth (required for MindScore)',
+                  style: TextStyle(color: Color(0xFF9a85c8), fontSize: 12),
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: pickDob,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A1850),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selectedDob != null
+                            ? const Color(0xFF6B35C8)
+                            : const Color(0xFF3D2070),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 16,
+                          color: selectedDob != null
+                              ? const Color(0xFF9a85c8)
+                              : const Color(0xFF6B5A9E),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          dobLabel,
+                          style: TextStyle(
+                            color: selectedDob != null
+                                ? Colors.white
+                                : const Color(0xFF6B5A9E),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Continue'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel',
+                    style: TextStyle(color: Color(0xFF9a85c8))),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B35C8),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Continue'),
+              ),
+            ],
+          );
+        },
       ),
     );
     nameCtrl.dispose();
 
     if (confirmed == true && nameCtrl.text.trim().isNotEmpty) {
       if (!mounted) return;
-      await ref.read(authProvider.notifier).guestLogin(nameCtrl.text.trim());
+      await ref
+          .read(authProvider.notifier)
+          .guestLogin(nameCtrl.text.trim(), dateOfBirth: selectedDob);
     }
   }
 

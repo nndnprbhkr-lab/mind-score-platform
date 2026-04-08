@@ -58,7 +58,7 @@ public sealed class AuthService : IAuthService
         await _users.AddAsync(user, cancellationToken);
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Name, user.Email, token, user.Role == "admin", user.IsGuest);
+        return new AuthResponseDto(user.Id, user.Name, user.Email, token, user.Role == "admin", user.IsGuest, user.DateOfBirth.HasValue);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken)
@@ -75,11 +75,25 @@ public sealed class AuthService : IAuthService
         }
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Name, user.Email, token, user.Role == "admin", user.IsGuest);
+        return new AuthResponseDto(user.Id, user.Name, user.Email, token, user.Role == "admin", user.IsGuest, user.DateOfBirth.HasValue);
     }
 
     public async Task<AuthResponseDto> GuestLoginAsync(GuestLoginRequestDto request, CancellationToken cancellationToken)
     {
+        Guid? ageBandId = null;
+        if (request.DateOfBirth.HasValue)
+        {
+            var age = DateTime.UtcNow.Year - request.DateOfBirth.Value.Year;
+            if (DateTime.UtcNow.DayOfYear < request.DateOfBirth.Value.DayOfYear) age--;
+
+            var ageBand = await _db.AgeBands
+                .Where(a => a.IsActive && a.MinAge <= age && a.MaxAge >= age)
+                .OrderBy(a => a.DisplayOrder)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            ageBandId = ageBand?.Id;
+        }
+
         var guestId = Guid.NewGuid();
         var user = new User
         {
@@ -88,12 +102,35 @@ public sealed class AuthService : IAuthService
             Email = $"guest_{guestId}@guest.local",
             PasswordHash = PasswordHasher.Hash(Guid.NewGuid().ToString()),
             IsGuest = true,
+            DateOfBirth = request.DateOfBirth.HasValue
+                ? DateTime.SpecifyKind(request.DateOfBirth.Value, DateTimeKind.Utc)
+                : null,
+            AgeBandId = ageBandId,
             CreatedAtUtc = DateTime.UtcNow,
         };
 
         await _users.AddAsync(user, cancellationToken);
 
         var token = _jwtTokenService.CreateToken(user);
-        return new AuthResponseDto(user.Id, user.Name, user.Email, token, false, true);
+        return new AuthResponseDto(user.Id, user.Name, user.Email, token, false, true, user.DateOfBirth.HasValue);
+    }
+
+    public async Task UpdateDobAsync(Guid userId, DateTime dateOfBirth, CancellationToken cancellationToken)
+    {
+        var user = await _users.GetByIdAsync(userId, cancellationToken)
+            ?? throw new KeyNotFoundException("User not found.");
+
+        var age = DateTime.UtcNow.Year - dateOfBirth.Year;
+        if (DateTime.UtcNow.DayOfYear < dateOfBirth.DayOfYear) age--;
+
+        var ageBand = await _db.AgeBands
+            .Where(a => a.IsActive && a.MinAge <= age && a.MaxAge >= age)
+            .OrderBy(a => a.DisplayOrder)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        user.DateOfBirth = DateTime.SpecifyKind(dateOfBirth, DateTimeKind.Utc);
+        user.AgeBandId = ageBand?.Id;
+
+        await _db.SaveChangesAsync(cancellationToken);
     }
 }

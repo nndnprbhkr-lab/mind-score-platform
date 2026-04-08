@@ -8,6 +8,7 @@ class AuthState {
   final bool isAuthenticated;
   final bool isAdmin;
   final bool isGuest;
+  final bool hasDob;
   final String? userId;
   final String? name;
   final String? email;
@@ -19,6 +20,7 @@ class AuthState {
     this.isAuthenticated = false,
     this.isAdmin = false,
     this.isGuest = false,
+    this.hasDob = false,
     this.userId,
     this.name,
     this.email,
@@ -31,6 +33,7 @@ class AuthState {
     bool? isAuthenticated,
     bool? isAdmin,
     bool? isGuest,
+    bool? hasDob,
     String? userId,
     String? name,
     String? email,
@@ -42,6 +45,7 @@ class AuthState {
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isAdmin: isAdmin ?? this.isAdmin,
       isGuest: isGuest ?? this.isGuest,
+      hasDob: hasDob ?? this.hasDob,
       userId: userId ?? this.userId,
       name: name ?? this.name,
       email: email ?? this.email,
@@ -64,6 +68,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isAuthenticated: true,
         isAdmin: saved.isAdmin,
         isGuest: saved.isGuest,
+        hasDob: saved.hasDob,
         userId: saved.userId,
         name: saved.name,
         email: saved.email,
@@ -77,6 +82,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       isAuthenticated: true,
       isAdmin: response.isAdmin,
       isGuest: response.isGuest,
+      hasDob: response.hasDob,
       userId: response.userId,
       name: response.name,
       email: response.email,
@@ -99,6 +105,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: response.email,
         isAdmin: response.isAdmin,
         isGuest: response.isGuest,
+        hasDob: response.hasDob,
       );
       _applyResponse(response);
     } on ApiException catch (e) {
@@ -135,6 +142,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: response.email,
         isAdmin: response.isAdmin,
         isGuest: response.isGuest,
+        hasDob: response.hasDob,
       );
       _applyResponse(response);
     } on ApiException catch (e) {
@@ -144,12 +152,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> guestLogin(String name) async {
+  Future<void> guestLogin(String name, {DateTime? dateOfBirth}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final json = await ApiClient.post(
         ApiConstants.guestLogin,
-        GuestLoginRequest(name: name).toJson(),
+        GuestLoginRequest(name: name, dateOfBirth: dateOfBirth).toJson(),
       );
       final response = AuthResponse.fromJson(json);
       await TokenStorage.save(
@@ -159,12 +167,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: response.email,
         isAdmin: response.isAdmin,
         isGuest: response.isGuest,
+        hasDob: response.hasDob,
       );
       _applyResponse(response);
     } on ApiException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Unexpected error. Try again.');
+    }
+  }
+
+  Future<void> updateDob(DateTime dateOfBirth) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await ApiClient.patch(
+        ApiConstants.userMe,
+        {'dateOfBirth': dateOfBirth.toIso8601String()},
+        auth: true,
+      );
+      state = state.copyWith(isLoading: false, hasDob: true);
+      await TokenStorage.save(
+        token: state.token!,
+        userId: state.userId!,
+        name: state.name ?? '',
+        email: state.email ?? '',
+        isAdmin: state.isAdmin,
+        isGuest: state.isGuest,
+        hasDob: true,
+      );
+    } on ApiException catch (e) {
+      state = state.copyWith(isLoading: false, error: e.message);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: 'Failed to save date of birth.');
     }
   }
 

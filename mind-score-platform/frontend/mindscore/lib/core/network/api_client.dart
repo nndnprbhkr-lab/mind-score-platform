@@ -42,6 +42,19 @@ class ApiClient {
     return _handleObject(response);
   }
 
+  static Future<void> patch(
+    String url,
+    Map<String, dynamic> body, {
+    bool auth = false,
+  }) async {
+    final response = await http.patch(
+      Uri.parse(url),
+      headers: await _headers(auth: auth),
+      body: jsonEncode(body),
+    );
+    _assertSuccess(response);
+  }
+
   static Future<Map<String, dynamic>> get(
     String url, {
     bool auth = true,

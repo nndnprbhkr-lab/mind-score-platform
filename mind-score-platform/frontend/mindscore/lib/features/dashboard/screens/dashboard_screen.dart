@@ -12,6 +12,141 @@ import '../../../features/results/providers/results_provider.dart';
 import '../../../widgets/mpi/mpi_result_card.dart';
 import '../../dashboard/providers/tests_provider.dart';
 
+Future<void> _handleTestStart(
+  BuildContext context,
+  WidgetRef ref,
+  AuthState auth,
+  TestModel test,
+) async {
+  final isMindScore = test.name.toLowerCase().contains('mindscore');
+  if (isMindScore && !auth.hasDob) {
+    DateTime? selectedDob;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          final dobLabel = selectedDob != null
+              ? '${selectedDob!.day.toString().padLeft(2, '0')}/${selectedDob!.month.toString().padLeft(2, '0')}/${selectedDob!.year}'
+              : 'Select date of birth';
+
+          Future<void> pickDob() async {
+            final now = DateTime.now();
+            final picked = await showDatePicker(
+              context: ctx,
+              initialDate: selectedDob ?? DateTime(now.year - 25),
+              firstDate: DateTime(now.year - 100),
+              lastDate: DateTime(now.year - 5),
+              builder: (ctx, child) => Theme(
+                data: Theme.of(ctx).copyWith(
+                  colorScheme: const ColorScheme.dark(
+                    primary: Color(0xFF6B35C8),
+                    onPrimary: Colors.white,
+                    surface: Color(0xFF1E0F3C),
+                    onSurface: Colors.white,
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) setDialogState(() => selectedDob = picked);
+          }
+
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1E0F3C),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text(
+              'Date of Birth Required',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'MindScore uses age-specific norms to calculate your result. Please enter your date of birth to continue.',
+                  style: TextStyle(color: Color(0xFF9a85c8), fontSize: 14, height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: pickDob,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A1850),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selectedDob != null
+                            ? const Color(0xFF6B35C8)
+                            : const Color(0xFF3D2070),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 16,
+                          color: selectedDob != null
+                              ? const Color(0xFF9a85c8)
+                              : const Color(0xFF6B5A9E),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          dobLabel,
+                          style: TextStyle(
+                            color: selectedDob != null ? Colors.white : const Color(0xFF6B5A9E),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel', style: TextStyle(color: Color(0xFF9a85c8))),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6B35C8),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: selectedDob == null ? null : () => Navigator.pop(ctx, true),
+                child: const Text('Continue'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (confirmed != true || selectedDob == null) return;
+
+    await ref.read(authProvider.notifier).updateDob(selectedDob!);
+
+    if (!context.mounted) return;
+    final updatedAuth = ref.read(authProvider);
+    if (updatedAuth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(updatedAuth.error!),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+  }
+
+  if (!context.mounted) return;
+  context.go(AppRoutes.testWithId(test.id), extra: test.name);
+}
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -112,9 +247,8 @@ class _MobileLayout extends StatelessWidget {
                         ? const _EmptyTests()
                         : _FeaturedTestCard(
                             test: testsState.tests.first,
-                            onStart: () => context.go(
-                              AppRoutes.testWithId(testsState.tests.first.id),
-                              extra: testsState.tests.first.name,
+                            onStart: () => _handleTestStart(
+                              context, ref, auth, testsState.tests.first,
                             ),
                           ),
               ),
@@ -146,9 +280,8 @@ class _MobileLayout extends StatelessWidget {
                               padding: const EdgeInsets.only(bottom: 12),
                               child: _RegularTestCard(
                                 test: t,
-                                onStart: () => context.go(
-                                  AppRoutes.testWithId(t.id),
-                                  extra: t.name,
+                                onStart: () => _handleTestStart(
+                                  context, ref, auth, t,
                                 ),
                               ),
                             );
@@ -231,9 +364,8 @@ class _TabletDesktopLayout extends StatelessWidget {
                                   : _TestsGrid(
                                       tests: testsState.tests,
                                       columns: testColumns,
-                                      onStart: (t) => context.go(
-                                        AppRoutes.testWithId(t.id),
-                                        extra: t.name,
+                                      onStart: (t) => _handleTestStart(
+                                        context, ref, auth, t,
                                       ),
                                     ),
                     ],

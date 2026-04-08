@@ -17,4 +17,5 @@ class ApiConstants {
   static String get responses => '$baseUrl/api/responses';
   static String get results   => '$baseUrl/api/results';
   static String get reports   => '$baseUrl/api/reports';
+  static String get userMe    => '$baseUrl/api/users/me';
 }
