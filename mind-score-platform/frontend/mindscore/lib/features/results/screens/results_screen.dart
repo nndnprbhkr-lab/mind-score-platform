@@ -1,3 +1,16 @@
+// MPI (MindType Profile Inventory) results screen.
+//
+// Displays the user's four-letter type code, a radar chart of dimension
+// percentages, strengths/growth/career insight cards, an action plan, and
+// buttons to download the PDF report or copy a share text.
+//
+// Data source: [testProvider] (just-submitted result) or [mpiResultProvider]
+// (most recent MPI result loaded from history), with a fallback empty state.
+//
+// The layout is responsive via [ResponsiveWrapper]:
+//   - Mobile:  single scrollable ListView.
+//   - Desktop: two-column Row (main content left, sidebar right).
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -18,22 +31,38 @@ import '../../../widgets/mpi/mpi_radar_chart.dart';
 import '../../../widgets/mpi/mpi_dimension_row.dart';
 import '../../../widgets/mpi/mpi_action_plan_card.dart';
 
-// ─── Palette ─────────────────────────────────────────────────────────────────
-const _kPurple = Color(0xFF6B35C8);
-const _kPurpleLight = Color(0xFFA67CF0);
-const _kPink = Color(0xFFFF6B9D);
-const _kCardBg = Color(0xFF2A1850);
-const _kCardBorder = Color(0xFF3D2070);
+// ─── _MpiDisplayData ─────────────────────────────────────────────────────────
 
-// ─── MPI display data ─────────────────────────────────────────────────────────
+/// A view-model that flattens the various MPI result sources into a single
+/// shape consumed by the layout widgets.
+///
+/// Both [ResultModel] (from [testProvider]) and [MpiResult] (from
+/// [mpiResultProvider]) carry the same logical data but in different
+/// structures.  This adapter class normalises them so the layout widgets
+/// don't need to know the source.
 class _MpiDisplayData {
+  /// Four-letter type code (e.g. `EOLS`).
   final String typeCode;
+
+  /// Human-readable personality type name (e.g. "The Strategist").
   final String typeName;
+
+  /// Emoji associated with the personality type.
   final String emoji;
+
+  /// Motivational tagline for the personality type.
   final String tagline;
+
+  /// Key strengths for this type.
   final List<String> strengths;
+
+  /// Recommended growth areas.
   final List<String> growthAreas;
+
+  /// Career paths suited to this personality type.
   final List<String> careerPaths;
+
+  /// Description of how this type typically communicates.
   final String communicationStyle;
 
   const _MpiDisplayData({
@@ -47,6 +76,9 @@ class _MpiDisplayData {
     required this.communicationStyle,
   });
 
+  /// Constructs from a [ResultModel] (just-submitted, still in [testProvider]).
+  ///
+  /// Parses list fields from the raw [ResultModel.insights] JSON map.
   factory _MpiDisplayData.fromResult(ResultModel result) {
     List<String> parseList(String key) {
       final raw = result.insights?[key];
@@ -55,33 +87,47 @@ class _MpiDisplayData {
     }
 
     return _MpiDisplayData(
-      typeCode: result.typeCode ?? '',
-      typeName: result.typeName ?? 'Your MindType Profile',
-      emoji: result.emoji ?? '🧠',
-      tagline: result.tagline ?? '',
-      strengths: parseList('strengths'),
-      growthAreas: parseList('growthAreas'),
-      careerPaths: parseList('careerPaths'),
+      typeCode:          result.typeCode ?? '',
+      typeName:          result.typeName ?? 'Your MindType Profile',
+      emoji:             result.emoji ?? '🧠',
+      tagline:           result.tagline ?? '',
+      strengths:         parseList('strengths'),
+      growthAreas:       parseList('growthAreas'),
+      careerPaths:       parseList('careerPaths'),
       communicationStyle:
           result.insights?['communicationStyle'] as String? ?? '',
     );
   }
 
+  /// Constructs from a fully-typed [MpiResult] (loaded from [mpiResultProvider]).
   factory _MpiDisplayData.fromMpiResult(MpiResult r) {
     return _MpiDisplayData(
-      typeCode: r.typeCode,
-      typeName: r.typeName,
-      emoji: r.emoji,
-      tagline: r.tagline,
-      strengths: r.strengths,
-      growthAreas: r.growthAreas,
-      careerPaths: r.careerPaths,
+      typeCode:          r.typeCode,
+      typeName:          r.typeName,
+      emoji:             r.emoji,
+      tagline:           r.tagline,
+      strengths:         r.strengths,
+      growthAreas:       r.growthAreas,
+      careerPaths:       r.careerPaths,
       communicationStyle: r.communicationStyle,
     );
   }
 }
 
-// ─── Results screen ───────────────────────────────────────────────────────────
+// ─── ResultsScreen ───────────────────────────────────────────────────────────
+
+/// The root widget for the MPI results screen.
+///
+/// Orchestrates data resolution:
+///   1. Checks [testProvider] for a just-submitted result (excluding
+///      `MIND_SCORE` which has its own screen).
+///   2. Falls back to [mpiResultProvider] for the most recent server-side
+///      MPI result.
+///   3. Shows a loading spinner while [mpiResultProvider] is reloading.
+///   4. Shows an empty-state view if no MPI result is available at all.
+///
+/// Once data is resolved, delegates layout to [_MobileLayout] or [_WideLayout]
+/// via [ResponsiveWrapper].
 class ResultsScreen extends ConsumerStatefulWidget {
   const ResultsScreen({super.key});
 
@@ -97,6 +143,10 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     super.initState();
   }
 
+  /// Formats the elapsed test duration for display.
+  ///
+  /// Returns `—` if no duration was recorded.  Omits the seconds component
+  /// when the duration is a whole number of minutes.
   String get _duration {
     final secs = ref.read(testProvider).durationSeconds;
     if (secs == null || secs <= 0) return '—';
@@ -106,12 +156,20 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     return s == 0 ? '${m}m' : '${m}m ${s}s';
   }
 
+  /// Resolves the result ID to use for PDF report requests.
+  ///
+  /// Prefers the just-submitted result from [testProvider]; falls back to
+  /// the most recent MPI result from [mpiResultProvider].
   String? get _resultId {
     final testResultId = ref.read(testProvider).result?.id;
     if (testResultId != null) return testResultId;
     return ref.read(mpiResultProvider).valueOrNull?.id;
   }
 
+  /// Requests the signed report URL from the backend and attempts to open it.
+  ///
+  /// If the URL cannot be launched (e.g. no browser on desktop), falls back
+  /// to copying it to the clipboard.  Shows a snackbar for all outcomes.
   Future<void> _downloadReport() async {
     final resultId = _resultId;
     if (resultId == null) return;
@@ -143,13 +201,14 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     }
   }
 
+  /// Composes a shareable text summary and copies it to the clipboard.
   Future<void> _shareResults() async {
     final result = ref.read(testProvider).result;
-    final mpi = ref.read(mpiResultProvider).valueOrNull;
-    final emoji = result?.emoji ?? mpi?.emoji ?? '🧠';
+    final mpi    = ref.read(mpiResultProvider).valueOrNull;
+    final emoji    = result?.emoji    ?? mpi?.emoji    ?? '🧠';
     final typeName = result?.typeName ?? mpi?.typeName ?? '';
     final typeCode = result?.typeCode ?? mpi?.typeCode ?? '';
-    final tagline = result?.tagline ?? mpi?.tagline ?? '';
+    final tagline  = result?.tagline  ?? mpi?.tagline  ?? '';
     final text = 'I just discovered my personality type on MindScore!\n'
         '$emoji $typeName ($typeCode)\n'
         '"$tagline"\n'
@@ -158,6 +217,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
     _showSnack('Results copied to clipboard — paste to share!');
   }
 
+  /// Displays a floating snackbar with [msg].
   void _showSnack(String msg) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -168,18 +228,18 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   @override
   Widget build(BuildContext context) {
     final test = ref.watch(testProvider);
-    // Treat any stale MIND_SCORE result as absent — /results is MPI-only.
+    // Filter out MIND_SCORE results — they belong to a separate screen.
     final result = test.result?.typeCode == 'MIND_SCORE' ? null : test.result;
 
     if (result == null && !test.isLoading) {
       final mpiAsync = ref.watch(mpiResultProvider);
 
-      // While provider is reloading keep the screen stable — don't reroute.
+      // Keep the screen stable while the provider is reloading.
       if (mpiAsync.isLoading) {
         return const Scaffold(
           backgroundColor: AppColors.backgroundDark,
           body: Center(
-            child: CircularProgressIndicator(color: _kPurple),
+            child: CircularProgressIndicator(color: AppColors.accent),
           ),
         );
       }
@@ -187,7 +247,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       final mpiResult = mpiAsync.valueOrNull;
 
       if (mpiResult == null) {
-        // No MPI result at all
+        // No MPI result available at all — show empty state.
         return Scaffold(
           backgroundColor: AppColors.backgroundDark,
           body: Center(
@@ -210,7 +270,8 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                     ref.read(testProvider.notifier).reset();
                     context.go(AppRoutes.dashboard);
                   },
-                  style: FilledButton.styleFrom(backgroundColor: _kPurple),
+                  style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.accent),
                   child: const Text('Go to Dashboard'),
                 ),
               ],
@@ -219,41 +280,43 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         );
       }
 
+      // Have an MPI result from history — build display data and show layout.
       final mpiData = _MpiDisplayData.fromMpiResult(mpiResult);
       return ResponsiveWrapper(
         mobile: (ctx) => _MobileLayout(
-          mpiData: mpiData,
-          duration: '',
-          testName: mpiResult.testName,
+          mpiData:       mpiData,
+          duration:      '',
+          testName:      mpiResult.testName,
           isDownloading: _isDownloading,
-          onDownload: _downloadReport,
-          onShare: _shareResults,
-          onBack: () => context.go(AppRoutes.dashboard),
-          ref: ref,
+          onDownload:    _downloadReport,
+          onShare:       _shareResults,
+          onBack:        () => context.go(AppRoutes.dashboard),
+          ref:           ref,
         ),
         desktop: (ctx) => _WideLayout(
-          mpiData: mpiData,
-          duration: '',
-          testName: mpiResult.testName,
+          mpiData:       mpiData,
+          duration:      '',
+          testName:      mpiResult.testName,
           isDownloading: _isDownloading,
-          onDownload: _downloadReport,
-          onShare: _shareResults,
-          onBack: () => context.go(AppRoutes.dashboard),
-          ref: ref,
+          onDownload:    _downloadReport,
+          onShare:       _shareResults,
+          onBack:        () => context.go(AppRoutes.dashboard),
+          ref:           ref,
         ),
       );
     }
 
+    // Have a just-submitted result from testProvider.
     final mpiData = result != null
         ? _MpiDisplayData.fromResult(result)
         : const _MpiDisplayData(
-            typeCode: '',
-            typeName: 'Your Profile',
-            emoji: '🧠',
-            tagline: '',
-            strengths: [],
-            growthAreas: [],
-            careerPaths: [],
+            typeCode:          '',
+            typeName:          'Your Profile',
+            emoji:             '🧠',
+            tagline:           '',
+            strengths:         [],
+            growthAreas:       [],
+            careerPaths:       [],
             communicationStyle: '',
           );
     final duration = _duration;
@@ -261,12 +324,12 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 
     return ResponsiveWrapper(
       mobile: (ctx) => _MobileLayout(
-        mpiData: mpiData,
-        duration: duration,
-        testName: testName,
+        mpiData:       mpiData,
+        duration:      duration,
+        testName:      testName,
         isDownloading: _isDownloading,
-        onDownload: _downloadReport,
-        onShare: _shareResults,
+        onDownload:    _downloadReport,
+        onShare:       _shareResults,
         onBack: () {
           ref.read(testProvider.notifier).reset();
           context.go(AppRoutes.dashboard);
@@ -274,12 +337,12 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         ref: ref,
       ),
       desktop: (ctx) => _WideLayout(
-        mpiData: mpiData,
-        duration: duration,
-        testName: testName,
+        mpiData:       mpiData,
+        duration:      duration,
+        testName:      testName,
         isDownloading: _isDownloading,
-        onDownload: _downloadReport,
-        onShare: _shareResults,
+        onDownload:    _downloadReport,
+        onShare:       _shareResults,
         onBack: () {
           ref.read(testProvider.notifier).reset();
           context.go(AppRoutes.dashboard);
@@ -290,9 +353,12 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Mobile layout
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Mobile layout ────────────────────────────────────────────────────────────
+
+/// Single-column scrollable layout for narrow (mobile) viewports.
+///
+/// Renders: legend header → hero card → radar chart → dimension row →
+/// strengths → growth areas → action plan → career paths → download → share.
 class _MobileLayout extends StatelessWidget {
   final _MpiDisplayData mpiData;
   final String duration;
@@ -334,7 +400,7 @@ class _MobileLayout extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
-          // 1. MpiLegendHeader
+          // Dimension legend strip at the top
           Consumer(builder: (context, ref, _) {
             final mpi = ref.watch(mpiResultProvider);
             return mpi.maybeWhen(
@@ -350,100 +416,82 @@ class _MobileLayout extends StatelessWidget {
             );
           }),
 
-          // 2. _HeroCard
           _HeroCard(mpiData: mpiData)
               .animate()
               .fadeIn(duration: 400.ms)
               .slideY(begin: 0.06, end: 0),
 
-          // 3. SizedBox(16)
           const SizedBox(height: 16),
 
-          // 4. Radar chart container
           if (mpiResult != null)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
-                color: _kCardBg,
+                color: AppColors.primaryMid,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _kCardBorder),
+                border: Border.all(color: AppColors.cardBorder),
               ),
               child: Center(
                 child: MpiRadarChart(result: mpiResult, size: 260),
               ),
             ).animate(delay: 60.ms).fadeIn(duration: 400.ms),
 
-          // 5. SizedBox(16)
           const SizedBox(height: 16),
 
-          // 6. MpiDimensionRow
           if (mpiResult != null)
             MpiDimensionRow(result: mpiResult)
                 .animate(delay: 80.ms)
                 .fadeIn(duration: 350.ms)
                 .slideY(begin: 0.06, end: 0),
 
-          // 7. SizedBox(16)
           const SizedBox(height: 16),
 
-          // 8. Strengths
           _InsightCard(
-            title: 'Your Strengths',
-            dotColor: _kPurple,
-            items: mpiData.strengths,
+            title:    'Your Strengths',
+            dotColor: AppColors.accent,
+            items:    mpiData.strengths,
           )
               .animate(delay: 140.ms)
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
 
-          // 9. SizedBox(12)
           const SizedBox(height: 12),
 
-          // 10. Growth Areas
           _InsightCard(
-            title: 'Growth Areas',
-            dotColor: _kPurpleLight,
-            items: mpiData.growthAreas,
+            title:    'Growth Areas',
+            dotColor: AppColors.accentLight,
+            items:    mpiData.growthAreas,
           )
               .animate(delay: 180.ms)
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
 
-          // 11. SizedBox(12)
           const SizedBox(height: 12),
 
-          // 12. MpiActionPlanCard
           if (mpiResult != null)
             MpiActionPlanCard(result: mpiResult)
                 .animate(delay: 200.ms)
                 .fadeIn(duration: 350.ms),
 
-          // 13. SizedBox(12)
           const SizedBox(height: 12),
 
-          // 14. Career Paths
           _InsightCard(
-            title: 'Career Paths',
-            dotColor: _kPink,
-            items: mpiData.careerPaths,
+            title:    'Career Paths',
+            dotColor: AppColors.highlight,
+            items:    mpiData.careerPaths,
           )
               .animate(delay: 220.ms)
               .fadeIn(duration: 350.ms)
               .slideY(begin: 0.06, end: 0),
 
-          // 15. SizedBox(24)
           const SizedBox(height: 24),
 
-          // 16. Download button
-          _DownloadButton(
-            isLoading: isDownloading,
-            onTap: onDownload,
-          ).animate(delay: 280.ms).fadeIn(duration: 300.ms),
+          _DownloadButton(isLoading: isDownloading, onTap: onDownload)
+              .animate(delay: 280.ms)
+              .fadeIn(duration: 300.ms),
 
-          // 17. SizedBox(12)
           const SizedBox(height: 12),
 
-          // 18. Share button
           _ShareButton(onTap: onShare)
               .animate(delay: 320.ms)
               .fadeIn(duration: 300.ms),
@@ -453,9 +501,14 @@ class _MobileLayout extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tablet / Desktop (wide) layout
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Wide (desktop) layout ────────────────────────────────────────────────────
+
+/// Two-column layout for tablet / desktop viewports.
+///
+/// Left column (scrollable): hero card → info cards row → radar chart +
+/// dimension row (side by side) → action plan → strengths/growth areas.
+/// Right column (300 px sidebar): career paths → communication style →
+/// download button → share button.
 class _WideLayout extends StatelessWidget {
   final _MpiDisplayData mpiData;
   final String duration;
@@ -496,7 +549,7 @@ class _WideLayout extends StatelessWidget {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Left panel ──────────────────────────────────────────────────────
+          // ── Main content (left) ──────────────────────────────────────────
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(32),
@@ -525,9 +578,10 @@ class _WideLayout extends StatelessWidget {
                               padding:
                                   const EdgeInsets.symmetric(vertical: 20),
                               decoration: BoxDecoration(
-                                color: _kCardBg,
+                                color: AppColors.primaryMid,
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: _kCardBorder),
+                                border:
+                                    Border.all(color: AppColors.cardBorder),
                               ),
                               child: Center(
                                 child: MpiRadarChart(
@@ -557,18 +611,22 @@ class _WideLayout extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _InsightCard(
-                          title: 'Your Strengths',
-                          dotColor: _kPurple,
-                          items: mpiData.strengths,
-                        ).animate(delay: 140.ms).fadeIn(duration: 350.ms),
+                          title:    'Your Strengths',
+                          dotColor: AppColors.accent,
+                          items:    mpiData.strengths,
+                        )
+                            .animate(delay: 140.ms)
+                            .fadeIn(duration: 350.ms),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _InsightCard(
-                          title: 'Growth Areas',
-                          dotColor: _kPurpleLight,
-                          items: mpiData.growthAreas,
-                        ).animate(delay: 180.ms).fadeIn(duration: 350.ms),
+                          title:    'Growth Areas',
+                          dotColor: AppColors.accentLight,
+                          items:    mpiData.growthAreas,
+                        )
+                            .animate(delay: 180.ms)
+                            .fadeIn(duration: 350.ms),
                       ),
                     ],
                   ),
@@ -577,11 +635,12 @@ class _WideLayout extends StatelessWidget {
             ),
           ),
 
-          // ── Right panel (300px) ─────────────────────────────────────────────
+          // ── Sidebar (right, 300 px) ──────────────────────────────────────
           Container(
             width: 300,
             decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: _kCardBorder)),
+              border:
+                  Border(left: BorderSide(color: AppColors.cardBorder)),
             ),
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -589,9 +648,9 @@ class _WideLayout extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _InsightCard(
-                    title: 'Career Paths',
-                    dotColor: _kPink,
-                    items: mpiData.careerPaths,
+                    title:    'Career Paths',
+                    dotColor: AppColors.highlight,
+                    items:    mpiData.careerPaths,
                   ).animate(delay: 200.ms).fadeIn(duration: 350.ms),
 
                   const SizedBox(height: 16),
@@ -603,10 +662,9 @@ class _WideLayout extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  _DownloadButton(
-                    isLoading: isDownloading,
-                    onTap: onDownload,
-                  ).animate(delay: 280.ms).fadeIn(duration: 300.ms),
+                  _DownloadButton(isLoading: isDownloading, onTap: onDownload)
+                      .animate(delay: 280.ms)
+                      .fadeIn(duration: 300.ms),
 
                   const SizedBox(height: 12),
 
@@ -623,9 +681,10 @@ class _WideLayout extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Hero card
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _HeroCard ────────────────────────────────────────────────────────────────
+
+/// Displays the personality emoji, type name with gradient, type code badge,
+/// and tagline.
 class _HeroCard extends StatelessWidget {
   final _MpiDisplayData mpiData;
 
@@ -638,9 +697,9 @@ class _HeroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _kCardBg,
+        color: AppColors.primaryMid,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,7 +715,7 @@ class _HeroCard extends StatelessWidget {
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) => const LinearGradient(
-                        colors: [_kPurple, _kPink],
+                        colors: [AppColors.accent, AppColors.highlight],
                       ).createShader(bounds),
                       child: Text(
                         mpiData.typeName,
@@ -674,15 +733,15 @@ class _HeroCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: _kPurple.withValues(alpha: 0.18),
+                          color: AppColors.accent.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: _kPurple.withValues(alpha: 0.5)),
+                              color: AppColors.accent.withValues(alpha: 0.5)),
                         ),
                         child: Text(
                           mpiData.typeCode,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: _kPurpleLight,
+                            color: AppColors.accentLight,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.5,
                           ),
@@ -711,9 +770,9 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Info cards row (3 mini cards)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _InfoCardsRow ────────────────────────────────────────────────────────────
+
+/// A row of three compact metric cards: type code, assessment name, duration.
 class _InfoCardsRow extends StatelessWidget {
   final _MpiDisplayData mpiData;
   final String duration;
@@ -726,17 +785,17 @@ class _InfoCardsRow extends StatelessWidget {
       _MiniInfoCard(
         label: 'Type Code',
         value: mpiData.typeCode.isNotEmpty ? mpiData.typeCode : '—',
-        color: _kPurpleLight,
+        color: AppColors.accentLight,
       ),
       const _MiniInfoCard(
         label: 'Assessment',
         value: 'MindType',
-        color: _kPink,
+        color: AppColors.highlight,
       ),
       _MiniInfoCard(
         label: 'Duration',
         value: duration,
-        color: _kPurple,
+        color: AppColors.accent,
       ),
     ];
 
@@ -753,6 +812,7 @@ class _InfoCardsRow extends StatelessWidget {
   }
 }
 
+/// A compact single-metric card used in the info cards row.
 class _MiniInfoCard extends StatelessWidget {
   final String label;
   final String value;
@@ -770,9 +830,9 @@ class _MiniInfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       decoration: BoxDecoration(
-        color: _kCardBg,
+        color: AppColors.primaryMid,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
@@ -788,9 +848,8 @@ class _MiniInfoCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -798,11 +857,15 @@ class _MiniInfoCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Insight card (strengths / growth / career)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _InsightCard ─────────────────────────────────────────────────────────────
+
+/// A bulleted list card used for strengths, growth areas, and career paths.
+///
+/// Each bullet is a coloured dot ([dotColor]) followed by the item text.
 class _InsightCard extends StatelessWidget {
   final String title;
+
+  /// Colour of the bullet dot — differentiates card types visually.
   final Color dotColor;
   final List<String> items;
 
@@ -818,9 +881,9 @@ class _InsightCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _kCardBg,
+        color: AppColors.primaryMid,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,9 +940,9 @@ class _InsightCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Communication style card (desktop right panel)
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _CommunicationCard ───────────────────────────────────────────────────────
+
+/// Displays the communication-style description in the desktop sidebar.
 class _CommunicationCard extends StatelessWidget {
   final String communicationStyle;
 
@@ -891,9 +954,9 @@ class _CommunicationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _kCardBg,
+        color: AppColors.primaryMid,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kCardBorder),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,7 +964,7 @@ class _CommunicationCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.chat_bubble_outline_rounded,
-                  size: 16, color: _kPurpleLight),
+                  size: 16, color: AppColors.accentLight),
               const SizedBox(width: 8),
               Text(
                 'Communication Style',
@@ -926,9 +989,12 @@ class _CommunicationCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Buttons
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Action buttons ───────────────────────────────────────────────────────────
+
+/// Full-width button to request and open the PDF report.
+///
+/// Shows a progress indicator while [isLoading] is `true` (the signed URL
+/// is being fetched from the server).
 class _DownloadButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onTap;
@@ -942,9 +1008,9 @@ class _DownloadButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _kPink,
+          backgroundColor: AppColors.highlight,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: _kCardBorder,
+          disabledBackgroundColor: AppColors.cardBorder,
           padding: const EdgeInsets.symmetric(vertical: 15),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14)),
@@ -967,6 +1033,7 @@ class _DownloadButton extends StatelessWidget {
   }
 }
 
+/// Full-width outlined button to copy a share text to the clipboard.
 class _ShareButton extends StatelessWidget {
   final VoidCallback onTap;
 

@@ -2,8 +2,17 @@ using MindScorePlatform.Application.Interfaces;
 
 namespace MindScorePlatform.Infrastructure.Services.Mpi;
 
+/// <summary>
+/// Implements the MPI (MindType Profile Inventory) scoring algorithm.
+/// </summary>
+/// <remarks>
+/// The engine is stateless and synchronous — it performs only in-memory
+/// arithmetic with no database access.  See <see cref="IMpiScoringEngine"/>
+/// for the full nine-step algorithm description.
+/// </remarks>
 public sealed class MpiScoringEngine : IMpiScoringEngine
 {
+    /// <inheritdoc/>
     public MpiResult Score(List<MpiResponseInput> responses)
     {
         // STEP 1 — REVERSAL
@@ -30,6 +39,8 @@ public sealed class MpiScoringEngine : IMpiScoringEngine
         }
 
         // STEP 3 — RAW SCORE & NORMALISATION
+        // Maps the bucket sum from [count×1, count×5] to [0, 100].
+        // A bucket with no responses defaults to 50 (neutral centre).
         var percentages = new Dictionary<string, double>();
         foreach (var (prefix, scores) in groups)
         {

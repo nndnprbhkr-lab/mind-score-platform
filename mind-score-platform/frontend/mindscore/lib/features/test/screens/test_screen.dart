@@ -1,3 +1,19 @@
+// Active assessment test screen.
+//
+// Presents questions one-by-one with a Likert-scale answer selector, a
+// countdown timer, and a gradient progress bar.  After the last question is
+// answered the user can submit, which POSTs all answers to the backend and
+// navigates to the appropriate results screen.
+//
+// Sub-widgets in this file:
+//   _Header           — test name, question counter, timer badge.
+//   _GradientProgressBar — animated fill bar showing completion percentage.
+//   _QuestionCard     — question text + animated option list.
+//   _OptionCard       — a single selectable answer tile.
+//   _BottomBar        — auto-save indicator + Next / Submit button.
+//   _NextButton       — advances to the next question.
+//   _SubmitButton     — triggers final submission.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,20 +22,26 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_routes.dart';
 import '../providers/test_provider.dart';
 
-// ─── Palette shortcuts ────────────────────────────────────────────────────────
-const _kPurple = Color(0xFF6B35C8);
-const _kPink = Color(0xFFFF6B9D);
-const _kPurpleLight = Color(0xFFA67CF0);
-const _kCardBg = Color(0xFF2A1850);
-const _kCardBorder = Color(0xFF3D2070);
-const _kOptionText = Color(0xFFC8B8F0);
-const _kSelectedBg = Color(0x336B35C8); // rgba(107,53,200,0.2)
+// ─── TestScreen ───────────────────────────────────────────────────────────────
 
+/// The main widget for the active assessment experience.
+///
+/// On mount, calls [TestNotifier.loadTest] via a microtask to avoid calling
+/// `setState` during the first build.  All mutable state lives in
+/// [TestNotifier] / [TestState]; this widget is a pure projection.
 class TestScreen extends ConsumerStatefulWidget {
+  /// The UUID of the assessment to load.
   final String testId;
+
+  /// Display name shown in the header (used immediately before the API
+  /// returns, so the header is never blank).
   final String testName;
 
-  const TestScreen({super.key, required this.testId, this.testName = ''});
+  const TestScreen({
+    super.key,
+    required this.testId,
+    this.testName = '',
+  });
 
   @override
   ConsumerState<TestScreen> createState() => _TestScreenState();
@@ -29,18 +51,23 @@ class _TestScreenState extends ConsumerState<TestScreen> {
   @override
   void initState() {
     super.initState();
+    // Use a microtask so the first build completes before any state change.
     Future.microtask(() => ref
         .read(testProvider.notifier)
         .loadTest(widget.testId, testName: widget.testName));
   }
 
+  /// Shows a confirmation dialog before cancelling an in-progress test.
+  ///
+  /// Resets [testProvider] and navigates to the dashboard only when the user
+  /// explicitly confirms.
   Future<void> _confirmQuit() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Quit Test'),
-        content:
-            const Text('Your progress will be lost. Are you sure you want to quit?'),
+        content: const Text(
+            'Your progress will be lost. Are you sure you want to quit?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -60,6 +87,12 @@ class _TestScreenState extends ConsumerState<TestScreen> {
     }
   }
 
+  /// Shows a confirmation dialog, then submits the test.
+  ///
+  /// After a successful submission, routes to the correct results screen based
+  /// on the [ResultModel.typeCode] returned by the server:
+  ///   - `MIND_SCORE` → [AppRoutes.mindScoreResults]
+  ///   - anything else (MPI) → [AppRoutes.results]
   Future<void> _handleSubmit() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -74,7 +107,7 @@ class _TestScreenState extends ConsumerState<TestScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: _kPurple),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
             child: const Text('Submit'),
           ),
         ],
@@ -95,17 +128,17 @@ class _TestScreenState extends ConsumerState<TestScreen> {
   Widget build(BuildContext context) {
     final test = ref.watch(testProvider);
 
-    // ── Loading ───────────────────────────────────────────────────────────────
+    // ── Loading ────────────────────────────────────────────────────────────
     if (test.isLoading && test.questions.isEmpty) {
       return const Scaffold(
         backgroundColor: AppColors.backgroundDark,
         body: Center(
-          child: CircularProgressIndicator(color: _kPurple),
+          child: CircularProgressIndicator(color: AppColors.accent),
         ),
       );
     }
 
-    // ── Error ─────────────────────────────────────────────────────────────────
+    // ── Error ──────────────────────────────────────────────────────────────
     if (test.error != null && test.questions.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.backgroundDark,
@@ -135,7 +168,7 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       );
     }
 
-    // ── Empty ─────────────────────────────────────────────────────────────────
+    // ── Empty ──────────────────────────────────────────────────────────────
     if (test.questions.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.backgroundDark,
@@ -144,8 +177,8 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       );
     }
 
-    final current = test.questions[test.currentIndex];
-    final isLast = test.currentIndex == test.questions.length - 1;
+    final current    = test.questions[test.currentIndex];
+    final isLast     = test.currentIndex == test.questions.length - 1;
     final canProceed = current.selectedIndex != null;
 
     return Scaffold(
@@ -153,19 +186,19 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ───────────────────────────────────────────────────────
+            // Test name, question counter, countdown timer
             _Header(
-              testName: test.testName.isEmpty ? widget.testName : test.testName,
-              currentIndex: test.currentIndex,
-              total: test.questions.length,
+              testName:         test.testName.isEmpty ? widget.testName : test.testName,
+              currentIndex:     test.currentIndex,
+              total:            test.questions.length,
               remainingSeconds: test.remainingSeconds,
-              onBack: _confirmQuit,
+              onBack:           _confirmQuit,
             ),
 
-            // ── Gradient progress bar ────────────────────────────────────────
+            // Gradient progress fill bar
             _GradientProgressBar(progress: test.progress),
 
-            // ── Question content ─────────────────────────────────────────────
+            // Animated question card (fades/slides when question index changes)
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -183,12 +216,12 @@ class _TestScreenState extends ConsumerState<TestScreen> {
                       ),
                     ),
                     child: _QuestionCard(
-                      key: ValueKey(test.currentIndex),
+                      key:            ValueKey(test.currentIndex),
                       questionNumber: test.currentIndex + 1,
-                      total: test.questions.length,
-                      questionText: current.text,
-                      options: current.options,
-                      selectedIndex: current.selectedIndex,
+                      total:          test.questions.length,
+                      questionText:   current.text,
+                      options:        current.options,
+                      selectedIndex:  current.selectedIndex,
                       onSelect: (i) => ref
                           .read(testProvider.notifier)
                           .selectAnswer(test.currentIndex, i),
@@ -198,12 +231,12 @@ class _TestScreenState extends ConsumerState<TestScreen> {
               ),
             ),
 
-            // ── Bottom bar ───────────────────────────────────────────────────
+            // Auto-save label + Next / Submit button
             _BottomBar(
-              isLast: isLast,
-              canProceed: canProceed,
+              isLast:       isLast,
+              canProceed:   canProceed,
               isSubmitting: test.isLoading,
-              onNext: canProceed
+              onNext:       canProceed
                   ? () => ref.read(testProvider.notifier).nextQuestion()
                   : null,
               onSubmit: _handleSubmit,
@@ -215,9 +248,13 @@ class _TestScreenState extends ConsumerState<TestScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Header
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _Header ─────────────────────────────────────────────────────────────────
+
+/// The top bar shown during an active assessment.
+///
+/// Contains a back/quit button, the test name and question counter centred
+/// in the middle, and a colour-coded timer badge on the right.  The timer
+/// badge turns red when [remainingSeconds] drops below 60 to warn the user.
 class _Header extends StatelessWidget {
   final String testName;
   final int currentIndex;
@@ -233,12 +270,14 @@ class _Header extends StatelessWidget {
     required this.onBack,
   });
 
+  /// Formats [s] seconds as `MM:SS`.
   String _fmt(int s) {
-    final m = s ~/ 60;
+    final m   = s ~/ 60;
     final sec = s % 60;
     return '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
 
+  /// `true` when fewer than 60 seconds remain — triggers the red warning state.
   bool get _isLow => remainingSeconds < 60;
 
   @override
@@ -248,7 +287,6 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
       child: Row(
         children: [
-          // Back arrow
           IconButton(
             onPressed: onBack,
             icon: const Icon(Icons.arrow_back_rounded),
@@ -256,7 +294,6 @@ class _Header extends StatelessWidget {
             tooltip: 'Quit test',
           ),
 
-          // Title + counter (centered)
           Expanded(
             child: Column(
               children: [
@@ -273,27 +310,25 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${currentIndex + 1} of $total',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
 
-          // Timer badge
+          // Timer badge — transitions colour smoothly via AnimatedContainer.
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: _isLow
                   ? AppColors.error.withValues(alpha: 0.15)
-                  : _kPink.withValues(alpha: 0.15),
+                  : AppColors.highlight.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _isLow ? AppColors.error : _kPink,
+                color: _isLow ? AppColors.error : AppColors.highlight,
                 width: 1,
               ),
             ),
@@ -303,13 +338,13 @@ class _Header extends StatelessWidget {
                 Icon(
                   Icons.timer_outlined,
                   size: 14,
-                  color: _isLow ? AppColors.error : _kPink,
+                  color: _isLow ? AppColors.error : AppColors.highlight,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   _fmt(remainingSeconds),
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: _isLow ? AppColors.error : _kPink,
+                    color: _isLow ? AppColors.error : AppColors.highlight,
                     fontWeight: FontWeight.w700,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -323,10 +358,12 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Gradient progress bar
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _GradientProgressBar ─────────────────────────────────────────────────────
+
+/// An animated gradient fill bar that shows how far through the test the
+/// user is, plus a percentage label beneath it.
 class _GradientProgressBar extends StatelessWidget {
+  /// Completion fraction in the range [0.0, 1.0].
   final double progress;
 
   const _GradientProgressBar({required this.progress});
@@ -344,16 +381,16 @@ class _GradientProgressBar extends StatelessWidget {
               builder: (context, constraints) {
                 return Stack(
                   children: [
-                    // Track
+                    // Track (full width, unfilled)
                     Container(
                       height: 6,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: _kCardBorder,
+                        color: AppColors.cardBorder,
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
-                    // Fill
+                    // Fill (animated width, gradient)
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeInOut,
@@ -361,7 +398,7 @@ class _GradientProgressBar extends StatelessWidget {
                       width: constraints.maxWidth * progress,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [_kPurple, _kPink],
+                          colors: [AppColors.accent, AppColors.highlight],
                         ),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -374,9 +411,10 @@ class _GradientProgressBar extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '${(progress * 100).round()}% complete',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppColors.textMuted,
-                ),
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: AppColors.textMuted),
           ),
         ],
       ),
@@ -384,9 +422,13 @@ class _GradientProgressBar extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Question card
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _QuestionCard ────────────────────────────────────────────────────────────
+
+/// Displays a single question with its numbered heading and answer options.
+///
+/// The [key] is set to `ValueKey(currentIndex)` by the parent so that
+/// [AnimatedSwitcher] produces a fade + slide transition whenever the question
+/// changes.  Each option card stagger-animates in on first render.
 class _QuestionCard extends StatelessWidget {
   final int questionNumber;
   final int total;
@@ -413,18 +455,15 @@ class _QuestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question number
           Text(
             'Question $questionNumber of $total',
             style: theme.textTheme.labelLarge?.copyWith(
-              color: _kPurpleLight,
+              color: AppColors.accentLight,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.2,
             ),
           ),
           const SizedBox(height: 14),
-
-          // Question text
           Text(
             questionText,
             style: const TextStyle(
@@ -436,15 +475,15 @@ class _QuestionCard extends StatelessWidget {
           ),
           const SizedBox(height: 28),
 
-          // Answer options
+          // Stagger-animate options so they cascade in from top.
           ...List.generate(options.length, (i) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _OptionCard(
-                index: i,
-                text: options[i],
+                index:      i,
+                text:       options[i],
                 isSelected: selectedIndex == i,
-                onTap: () => onSelect(i),
+                onTap:      () => onSelect(i),
               )
                   .animate(delay: (i * 40).ms)
                   .fadeIn(duration: 300.ms)
@@ -459,9 +498,13 @@ class _QuestionCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Option card
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _OptionCard ──────────────────────────────────────────────────────────────
+
+/// A single selectable answer tile.
+///
+/// Uses [AnimatedContainer] to smoothly transition the border colour and
+/// background between unselected and selected states.  The radio-circle on
+/// the left provides an additional selected / unselected cue.
 class _OptionCard extends StatelessWidget {
   final int index;
   final String text;
@@ -481,10 +524,11 @@ class _OptionCard extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: isSelected ? _kSelectedBg : _kCardBg,
+        // accentSubtle gives a visible but non-distracting selection fill.
+        color: isSelected ? AppColors.accentSubtle : AppColors.primaryMid,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected ? _kPurple : _kCardBorder,
+          color: isSelected ? AppColors.accent : AppColors.cardBorder,
           width: isSelected ? 1.5 : 1,
         ),
       ),
@@ -494,23 +538,22 @@ class _OptionCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          splashColor: _kPurple.withValues(alpha: 0.12),
-          highlightColor: _kPurple.withValues(alpha: 0.06),
+          splashColor:    AppColors.accent.withValues(alpha: 0.12),
+          highlightColor: AppColors.accent.withValues(alpha: 0.06),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                // Radio circle
+                // Radio circle indicator
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 22,
+                  width:  22,
                   height: 22,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected ? _kPurple : Colors.transparent,
+                    shape:  BoxShape.circle,
+                    color:  isSelected ? AppColors.accent : Colors.transparent,
                     border: Border.all(
-                      color: isSelected ? _kPurple : _kCardBorder,
+                      color: isSelected ? AppColors.accent : AppColors.cardBorder,
                       width: 2,
                     ),
                   ),
@@ -523,14 +566,13 @@ class _OptionCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 14),
 
-                // Option text
                 Expanded(
                   child: Text(
                     text,
                     style: TextStyle(
                       fontSize: 14,
-                      color:
-                          isSelected ? Colors.white : _kOptionText,
+                      // Selected options use white for maximum contrast.
+                      color: isSelected ? Colors.white : AppColors.optionText,
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.normal,
@@ -547,9 +589,13 @@ class _OptionCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Bottom bar
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── _BottomBar ───────────────────────────────────────────────────────────────
+
+/// The sticky bottom bar containing an auto-save indicator and the primary
+/// action button (Next or Submit).
+///
+/// The auto-save indicator pulses with a fade-in/out loop to reassure users
+/// that their answers are being recorded.
 class _BottomBar extends StatelessWidget {
   final bool isLast;
   final bool canProceed;
@@ -569,13 +615,13 @@ class _BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: _kCardBorder)),
+        border: Border(top: BorderSide(color: AppColors.cardBorder)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Auto-save status
+          // Pulsing "auto-save" reassurance label.
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -594,23 +640,25 @@ class _BottomBar extends StatelessWidget {
               .fadeIn(duration: 800.ms)
               .then()
               .fadeOut(duration: 800.ms, delay: 2400.ms),
+
           const SizedBox(height: 12),
 
-          // Action button
+          // Swaps between Next and Submit depending on whether this is the
+          // last question.  AnimatedSwitcher provides a smooth cross-fade.
           SizedBox(
             width: double.infinity,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: isLast
                   ? _SubmitButton(
-                      key: const ValueKey('submit'),
+                      key:       const ValueKey('submit'),
                       isLoading: isSubmitting,
-                      onTap: canProceed ? onSubmit : null,
+                      onTap:     canProceed ? onSubmit : null,
                     )
                   : _NextButton(
-                      key: const ValueKey('next'),
+                      key:     const ValueKey('next'),
                       enabled: canProceed,
-                      onTap: onNext,
+                      onTap:   onNext,
                     ),
             ),
           ),
@@ -620,6 +668,10 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
+// ─── _NextButton / _SubmitButton ──────────────────────────────────────────────
+
+/// Advances to the next question.  Disabled until the current question has
+/// a selected answer.
 class _NextButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback? onTap;
@@ -631,12 +683,13 @@ class _NextButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: enabled ? onTap : null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: _kPurple,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: _kCardBorder,
+        backgroundColor:         AppColors.accent,
+        foregroundColor:         Colors.white,
+        disabledBackgroundColor: AppColors.cardBorder,
         disabledForegroundColor: AppColors.textMuted,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
         elevation: 0,
       ),
       child: const Row(
@@ -654,6 +707,8 @@ class _NextButton extends StatelessWidget {
   }
 }
 
+/// Submits the test.  Shows a spinner while the API request is in-flight.
+/// Disabled when the last question has no selected answer.
 class _SubmitButton extends StatelessWidget {
   final bool isLoading;
   final VoidCallback? onTap;
@@ -665,12 +720,13 @@ class _SubmitButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: _kPink,
-        foregroundColor: Colors.white,
-        disabledBackgroundColor: _kCardBorder,
+        backgroundColor:         AppColors.highlight,
+        foregroundColor:         Colors.white,
+        disabledBackgroundColor: AppColors.cardBorder,
         disabledForegroundColor: AppColors.textMuted,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14)),
         elevation: 0,
       ),
       child: isLoading
@@ -687,8 +743,8 @@ class _SubmitButton extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'Submit Test',
-                  style:
-                      TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 15),
                 ),
               ],
             ),

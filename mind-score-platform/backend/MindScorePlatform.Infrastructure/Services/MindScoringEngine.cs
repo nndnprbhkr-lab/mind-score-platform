@@ -7,13 +7,20 @@ namespace MindScorePlatform.Infrastructure.Services;
 
 /// <summary>
 /// Scores a MindScore submission for a given user and age band.
-///
-/// Algorithm:
-///   1. Load questions (with module + age-band filter) and norm references.
-///   2. For each module: sum adjusted scores (reverse-scored = 6 - value).
-///   3. Convert raw sum to percentile using NormalCdf(mean, sd) from norm table.
-///   4. Composite score = Σ (percentile × weight) clamped to [0,100].
 /// </summary>
+/// <remarks>
+/// Algorithm summary:
+/// <list type="number">
+///   <item>Load questions (filtered by age band and submitted question IDs) and norm references.</item>
+///   <item>For each module: sum adjusted scores (reverse-scored items use <c>6 − value</c>).</item>
+///   <item>Convert the per-module raw average to a percentile using <see cref="NormalCdf"/>
+///     parameterised by the age-band norm table (mean, SD).</item>
+///   <item>Composite score = Σ (percentile × weight), clamped to [0, 100].</item>
+/// </list>
+/// The normal CDF is approximated using the Abramowitz &amp; Stegun polynomial
+/// (equation 7.1.26, max error 1.5 × 10⁻⁷) for efficiency without requiring
+/// a numeric integration library.
+/// </remarks>
 public sealed class MindScoringEngine : IMindScoringEngine
 {
     private readonly AppDbContext _db;
@@ -23,6 +30,7 @@ public sealed class MindScoringEngine : IMindScoringEngine
         _db = db;
     }
 
+    /// <inheritdoc/>
     public async Task<MindScoreResultDto> ScoreAsync(
         Guid userId,
         Guid ageBandId,
