@@ -60,7 +60,7 @@ class AuthCardLayout extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(36),
       decoration: BoxDecoration(
-        color: kAuthCardBg.withValues(alpha: 0.85),
+        color: kAuthCardBg.withOpacity(0.85),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: kAuthBorder),
       ),
@@ -88,7 +88,7 @@ class AuthLogoMark extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: kAuthPurple.withValues(alpha: 0.4),
+              color: kAuthPurple.withOpacity(0.4),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

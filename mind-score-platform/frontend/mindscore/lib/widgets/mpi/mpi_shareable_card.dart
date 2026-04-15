@@ -529,7 +529,7 @@ class _SmallBarRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
               child: Stack(
                 children: [
-                  Container(color: _kVeryMuted.withValues(alpha: 0.3)),
+                  Container(color: _kVeryMuted.withOpacity(0.3)),
                   FractionallySizedBox(
                     widthFactor: pct,
                     child: Container(

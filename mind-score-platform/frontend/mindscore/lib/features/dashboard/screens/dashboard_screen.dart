@@ -144,7 +144,21 @@ Future<void> _handleTestStart(
   }
 
   if (!context.mounted) return;
-  context.go(AppRoutes.testWithId(test.id), extra: test.name);
+
+  // MindScore is a cognitive (context-agnostic) assessment — skip the context
+  // picker and use General context.  MPI assessments show the context selector
+  // so the adaptive engine can serve context-tuned questions.
+  if (isMindScore) {
+    context.go(
+      AppRoutes.testWithId(test.id),
+      extra: {'testName': test.name, 'context': 0},
+    );
+  } else {
+    context.go(
+      AppRoutes.contextSelection,
+      extra: {'testId': test.id, 'testName': test.name},
+    );
+  }
 }
 
 class DashboardScreen extends ConsumerWidget {
@@ -483,7 +497,7 @@ class _AvatarMenu extends StatelessWidget {
       tooltip: '',
       child: CircleAvatar(
         radius: 18,
-        backgroundColor: AppColors.accent.withValues(alpha: 0.18),
+        backgroundColor: AppColors.accent.withOpacity(0.18),
         child: Text(
           initial,
           style: TextStyle(
@@ -699,7 +713,7 @@ class _FeaturedTestCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -724,7 +738,7 @@ class _FeaturedTestCard extends StatelessWidget {
           Text(
             '${test.questionCount} questions · 3–5 min',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.75),
+              color: Colors.white.withOpacity(0.75),
             ),
           ),
           const SizedBox(height: 20),
@@ -788,7 +802,7 @@ class _RegularTestCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.18),
+                    color: Colors.white.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -811,7 +825,7 @@ class _RegularTestCard extends StatelessWidget {
                 Text(
                   '${test.questionCount} questions · 3–5 min',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.72),
+                    color: Colors.white.withOpacity(0.72),
                   ),
                 ),
               ],
@@ -916,7 +930,7 @@ class _GridTestCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
+                  color: Colors.white.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -943,7 +957,7 @@ class _GridTestCard extends StatelessWidget {
           Text(
             '${test.questionCount} questions · 3–5 min',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.72),
+              color: Colors.white.withOpacity(0.72),
             ),
           ),
           const SizedBox(height: 16),
@@ -1010,7 +1024,7 @@ class _ShimmerCard extends StatelessWidget {
         .animate(onPlay: (c) => c.repeat())
         .shimmer(
           duration: 1200.ms,
-          color: AppColors.cardBorder.withValues(alpha: 0.6),
+          color: AppColors.cardBorder.withOpacity(0.6),
         );
   }
 }

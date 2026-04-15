@@ -45,6 +45,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITestService, TestService>();
         services.AddScoped<IQuestionService, QuestionService>();
+        services.AddScoped<IAdaptiveQuestionService, AdaptiveQuestionService>();
         services.AddScoped<IResponseService, ResponseService>();
         services.AddScoped<IResultService, ResultService>();
         services.AddScoped<IReportService, ReportService>();
