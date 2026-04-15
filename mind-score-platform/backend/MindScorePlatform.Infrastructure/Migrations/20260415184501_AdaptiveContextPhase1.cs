@@ -11,11 +11,8 @@ namespace MindScorePlatform.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameIndex(
-                name: "IX_Users_agebandid",
-                table: "users",
-                newName: "IX_users_agebandid");
-
+            // IX_users_agebandid was already created lowercase in SyncSupabaseSchema — no rename needed.
+            // IX_Questions_* were created with PascalCase Q and need lowercasing for consistency.
             migrationBuilder.RenameIndex(
                 name: "IX_Questions_moduleid",
                 table: "questions",
@@ -261,11 +258,6 @@ namespace MindScorePlatform.Infrastructure.Migrations
             migrationBuilder.DropColumn(
                 name: "scenariooptionsjson",
                 table: "questions");
-
-            migrationBuilder.RenameIndex(
-                name: "IX_users_agebandid",
-                table: "users",
-                newName: "IX_Users_agebandid");
 
             migrationBuilder.RenameIndex(
                 name: "IX_questions_moduleid",
