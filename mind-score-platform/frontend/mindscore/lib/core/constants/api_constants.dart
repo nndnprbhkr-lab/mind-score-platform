@@ -46,6 +46,10 @@ class ApiConstants {
   /// MindScore assessments).
   static String get questions => '$baseUrl/api/questions';
 
+  /// Request the next adaptive question in a session.
+  /// POST with [AdaptiveNextQuestionRequestDto] body.
+  static String get questionsNext => '$baseUrl/api/questions/next';
+
   /// Submit user answers for server-side scoring.
   static String get responses => '$baseUrl/api/responses';
 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MindScorePlatform.Domain.Entities;
+using MindScorePlatform.Domain.Enums;
 
 namespace MindScorePlatform.Infrastructure.Persistence;
 
@@ -67,6 +68,10 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Weight).HasColumnName("weight");
             entity.Property(x => x.IsReverseScored).HasColumnName("isreversescored");
             entity.Property(x => x.Version).HasColumnName("version");
+            entity.Property(x => x.QuestionType).HasColumnName("questiontype").HasDefaultValue(QuestionType.Likert);
+            entity.Property(x => x.BranchingRulesJson).HasColumnName("branchingrulesjson").IsRequired(false);
+            entity.Property(x => x.ContextTagsJson).HasColumnName("contexttagsjson").IsRequired(false);
+            entity.Property(x => x.ScenarioOptionsJson).HasColumnName("scenariooptionsjson").IsRequired(false);
             entity.HasIndex(x => new { x.TestId, x.Order }).IsUnique().HasDatabaseName("IX_Questions_TestId_Order");
             entity.HasIndex(x => new { x.TestId, x.Code }).IsUnique().HasDatabaseName("IX_Questions_TestId_Code");
             entity.HasOne(x => x.Module)
@@ -107,6 +112,11 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.PersonalityTagline).IsRequired().HasColumnName("personalitytagline");
             entity.Property(x => x.DimensionScoresJson).IsRequired().HasColumnName("dimensionscoresjson");
             entity.Property(x => x.InsightsJson).IsRequired().HasColumnName("insightsjson");
+            entity.Property(x => x.Context).HasColumnName("context").HasDefaultValue(AssessmentContext.General);
+            entity.Property(x => x.ContextInsightsJson).HasColumnName("contextinsightsjson").IsRequired(false);
+            entity.Property(x => x.AdaptivePathJson).HasColumnName("adaptivepathjson").IsRequired(false);
+            entity.Property(x => x.AiFollowUpJson).HasColumnName("aifollowupjson").IsRequired(false);
+            entity.Property(x => x.DimensionConfidenceJson).HasColumnName("dimensionconfidencejson").IsRequired(false);
             entity.HasIndex(x => new { x.UserId, x.TestId }).IsUnique().HasDatabaseName("IX_Results_UserId_TestId");
         });
 

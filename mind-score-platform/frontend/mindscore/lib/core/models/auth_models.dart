@@ -36,13 +36,62 @@ class TestModel {
       );
 }
 
+// ─── QuestionType ─────────────────────────────────────────────────────────────
+
+/// Matches the backend [QuestionType] enum.
+enum QuestionType {
+  /// Standard 5-point Likert scale (Strongly Disagree → Strongly Agree).
+  likert,
+
+  /// Situational Judgment Test — rendered as a story card with 4–5 concrete options.
+  scenario,
+
+  /// AI-generated personalised follow-up question targeting a detected tension.
+  followUp,
+}
+
+// ─── AssessmentContext ────────────────────────────────────────────────────────
+
+/// The context the user declares at the start of an assessment.
+/// Matches the backend [AssessmentContext] enum.
+enum AssessmentContext {
+  general,
+  career,
+  relationships,
+  leadership,
+  personalDevelopment;
+
+  /// Display label shown on the context picker screen.
+  String get displayLabel => switch (this) {
+        AssessmentContext.general => 'General Self-Discovery',
+        AssessmentContext.career => 'Career Decision',
+        AssessmentContext.relationships => 'Relationship Struggles',
+        AssessmentContext.leadership => 'Leadership Growth',
+        AssessmentContext.personalDevelopment => 'Personal Development',
+      };
+
+  /// Short description shown below the label on the picker.
+  String get description => switch (this) {
+        AssessmentContext.general => 'Explore your core personality',
+        AssessmentContext.career => 'Discover the work you\'re built for',
+        AssessmentContext.relationships => 'Understand your relational patterns',
+        AssessmentContext.leadership => 'See how you lead and impact others',
+        AssessmentContext.personalDevelopment => 'Uncover your growth patterns',
+      };
+
+  /// Integer value matching the backend enum for API serialisation.
+  int get apiValue => index;
+
+  static AssessmentContext fromApiValue(int value) =>
+      AssessmentContext.values[value];
+}
+
 // ─── ApiQuestionModel ─────────────────────────────────────────────────────────
 
 /// A single question as returned by `GET /api/questions?testId=<id>`.
 ///
-/// The API model contains only the question metadata.  Answer options (Likert
-/// scale labels) are added client-side in [TestNotifier.loadTest] to avoid
-/// storing static option text in the database.
+/// Supports all three question formats: Likert, Scenario, and FollowUp.
+/// The [questionType] field determines which UI renderer to use in TestScreen.
 class ApiQuestionModel {
   /// Unique server-assigned identifier (UUID).
   final String id;
@@ -56,11 +105,37 @@ class ApiQuestionModel {
   /// Zero-based display order within the assessment.
   final int order;
 
+  /// The MPI question code (e.g. "EI_01_R"). Used by scoring engine.
+  final String code;
+
+  /// Presentation format — determines which UI widget renders this question.
+  final QuestionType questionType;
+
+  /// Populated only for [QuestionType.scenario] questions.
+  /// Each entry contains display text and hidden trait score mappings.
+  ///
+  /// Shape:
+  /// [
+  ///   {
+  ///     "text": "Send a detailed agenda tonight so everyone is prepared",
+  ///     "traitMappings": { "LifeApproach": 5, "DecisionStyle": 4 }
+  ///   },
+  ///   ...
+  /// ]
+  final List<Map<String, dynamic>>? scenarioOptions;
+
+  /// Context tags for this question. Null = shown in all contexts.
+  final List<String>? contextTags;
+
   const ApiQuestionModel({
     required this.id,
     required this.testId,
     required this.text,
     required this.order,
+    this.code = '',
+    this.questionType = QuestionType.likert,
+    this.scenarioOptions,
+    this.contextTags,
   });
 
   /// Deserialises an [ApiQuestionModel] from a JSON map.
@@ -69,7 +144,21 @@ class ApiQuestionModel {
         testId: j['testId'] as String,
         text: j['text'] as String,
         order: j['order'] as int,
+        code: j['code'] as String? ?? '',
+        questionType: _parseQuestionType(j['questionType'] as int? ?? 0),
+        scenarioOptions: (j['scenarioOptions'] as List<dynamic>?)
+            ?.map((e) => e as Map<String, dynamic>)
+            .toList(),
+        contextTags: (j['contextTags'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList(),
       );
+
+  static QuestionType _parseQuestionType(int value) => switch (value) {
+        1 => QuestionType.scenario,
+        2 => QuestionType.followUp,
+        _ => QuestionType.likert,
+      };
 }
 
 // ─── ResultModel ─────────────────────────────────────────────────────────────
@@ -128,13 +217,45 @@ class ResultModel {
     this.dimensionScores,
     this.insights,
     required this.createdAtUtc,
+    this.context = AssessmentContext.general,
+    this.contextInsights,
+    this.adaptivePath,
+    this.aiFollowUp,
+    this.dimensionConfidence,
   });
+
+  /// The context the user selected at the start of this assessment.
+  final AssessmentContext context;
+
+  /// Context-specific insights. Shape varies by [context]:
+  /// - Career → CareerInsights map
+  /// - Relationships → RelationshipInsights map
+  /// - Leadership → LeadershipInsights map
+  /// - PersonalDevelopment → PersonalDevelopmentInsights map
+  /// - General → null (use [insights] instead)
+  final Map<String, dynamic>? contextInsights;
+
+  /// Ordered list of question IDs served during the adaptive session.
+  final List<String>? adaptivePath;
+
+  /// AI follow-up questions, answers, and resolved tensions.
+  final Map<String, dynamic>? aiFollowUp;
+
+  /// Algorithm confidence per dimension (0–100).
+  final Map<String, dynamic>? dimensionConfidence;
 
   /// `true` if this result contains MPI personality data (not a MindScore result).
   ///
   /// Used to decide which result provider and UI branch to activate.
   bool get hasMpiData =>
       typeCode != null && typeCode!.isNotEmpty && typeCode != 'MIND_SCORE';
+
+  /// `true` if this result has context-specific insights (non-General context).
+  bool get hasContextInsights =>
+      context != AssessmentContext.general && contextInsights != null;
+
+  /// `true` if this result was generated with AI follow-up questions.
+  bool get hasAiFollowUp => aiFollowUp != null;
 
   /// Deserialises a [ResultModel] from the API's JSON response.
   factory ResultModel.fromJson(Map<String, dynamic> j) => ResultModel(
@@ -149,6 +270,13 @@ class ResultModel {
         dimensionScores: j['dimensionScores'],
         insights: j['insights'] as Map<String, dynamic>?,
         createdAtUtc: DateTime.parse(j['createdAtUtc'] as String),
+        context: AssessmentContext.fromApiValue(j['context'] as int? ?? 0),
+        contextInsights: j['contextInsights'] as Map<String, dynamic>?,
+        adaptivePath: (j['adaptivePath'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList(),
+        aiFollowUp: j['aiFollowUp'] as Map<String, dynamic>?,
+        dimensionConfidence: j['dimensionConfidence'] as Map<String, dynamic>?,
       );
 }
 

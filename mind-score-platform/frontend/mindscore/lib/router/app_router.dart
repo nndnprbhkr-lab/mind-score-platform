@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_routes.dart';
+import '../core/models/auth_models.dart';
 import '../features/auth/providers/auth_provider.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
@@ -9,6 +10,7 @@ import '../features/dashboard/screens/dashboard_screen.dart';
 import '../features/dashboard/screens/history_screen.dart';
 import '../features/reports/screens/reports_screen.dart';
 import '../features/profile/screens/profile_screen.dart';
+import '../features/test/screens/context_selection_screen.dart';
 import '../features/test/screens/test_screen.dart';
 import '../features/results/screens/results_screen.dart';
 import '../features/results/screens/mind_score_results_screen.dart';
@@ -41,14 +43,31 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (ctx, state) => _fadePage(const RegisterScreen(), state),
       ),
 
+      // Context selection — shown before MPI adaptive session begins
+      GoRoute(
+        path: AppRoutes.contextSelection,
+        pageBuilder: (ctx, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final testId   = extra['testId']   as String? ?? '';
+          final testName = extra['testName'] as String? ?? '';
+          return _fadePage(
+              ContextSelectionScreen(testId: testId, testName: testName),
+              state);
+        },
+      ),
+
       // Test flow — no shell
       GoRoute(
         path: AppRoutes.test,
         pageBuilder: (ctx, state) {
           final testId = state.pathParameters['testId'] ?? '';
-          final testName = state.extra as String? ?? '';
+          final extra  = state.extra as Map<String, dynamic>? ?? {};
+          final testName     = extra['testName']  as String? ?? '';
+          final contextValue = extra['context']   as int?    ?? 0;
+          final context      = AssessmentContext.fromApiValue(contextValue);
           return _fadePage(
-              TestScreen(testId: testId, testName: testName), state);
+              TestScreen(testId: testId, testName: testName, context: context),
+              state);
         },
       ),
       GoRoute(

@@ -359,7 +359,7 @@ class _DimensionBarRow extends ConsumerWidget {
                     child: Stack(
                       children: [
                         Container(
-                          color: _kVeryMuted.withValues(alpha: 0.25),
+                          color: _kVeryMuted.withOpacity(0.25),
                         ),
                         FractionallySizedBox(
                           widthFactor: pct,

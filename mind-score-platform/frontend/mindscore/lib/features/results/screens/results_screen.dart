@@ -733,10 +733,10 @@ class _HeroCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.18),
+                          color: AppColors.accent.withOpacity(0.18),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: AppColors.accent.withValues(alpha: 0.5)),
+                              color: AppColors.accent.withOpacity(0.5)),
                         ),
                         child: Text(
                           mpiData.typeCode,

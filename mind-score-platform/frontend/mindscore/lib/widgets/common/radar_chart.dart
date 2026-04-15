@@ -212,10 +212,10 @@ class _RadarChartState extends State<RadarChart>
             color: const Color(0xFF150A28),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: axis.color.withValues(alpha: 0.55), width: 1),
+                color: axis.color.withOpacity(0.55), width: 1),
             boxShadow: [
               BoxShadow(
-                color: axis.color.withValues(alpha: 0.22),
+                color: axis.color.withOpacity(0.22),
                 blurRadius: 14,
                 spreadRadius: 2,
               ),
@@ -278,7 +278,7 @@ class _RadarPainter extends CustomPainter {
 
     // ── Grid rings at 25 / 50 / 75 % ─────────────────────────────────────────
     final gridPaint = Paint()
-      ..color = const Color(0xFF5A3890).withValues(alpha: 0.55)
+      ..color = const Color(0xFF5A3890).withOpacity(0.55)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -309,7 +309,7 @@ class _RadarPainter extends CustomPainter {
 
     // ── Axis lines ────────────────────────────────────────────────────────────
     final axisPaint = Paint()
-      ..color = const Color(0xFF5A3890).withValues(alpha: 0.65)
+      ..color = const Color(0xFF5A3890).withOpacity(0.65)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -335,13 +335,13 @@ class _RadarPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFF6B35C8).withValues(alpha: 0.18 * progress)
+        ..color = const Color(0xFF6B35C8).withOpacity(0.18 * progress)
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFF6B35C8).withValues(alpha: 0.85)
+        ..color = const Color(0xFF6B35C8).withOpacity(0.85)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeJoin = StrokeJoin.round,
@@ -358,14 +358,14 @@ class _RadarPainter extends CustomPainter {
           v,
           13,
           Paint()
-            ..color = color.withValues(alpha: 0.18)
+            ..color = color.withOpacity(0.18)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
         );
         canvas.drawCircle(
           v,
           9,
           Paint()
-            ..color = color.withValues(alpha: 0.45)
+            ..color = color.withOpacity(0.45)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2,
         );

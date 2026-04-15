@@ -31,6 +31,10 @@ class AppRoutes {
   /// User profile / account settings screen.
   static const String profile          = '/profile';
 
+  /// Context selection screen — lets the user pick the lens for their
+  /// assessment before the adaptive session begins.
+  static const String contextSelection = '/context-selection';
+
   /// Assessment test screen — parameterised by [testId].
   ///
   /// Use [testWithId] to construct the concrete path for navigation.

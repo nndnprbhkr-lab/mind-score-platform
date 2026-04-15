@@ -355,7 +355,7 @@ class _MobileCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        splashColor: _kPurple.withValues(alpha: 0.08),
+        splashColor: _kPurple.withOpacity(0.08),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
@@ -369,10 +369,10 @@ class _MobileCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: type.color.withValues(alpha: 0.15),
+                  color: type.color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                      color: type.color.withValues(alpha: 0.3)),
+                      color: type.color.withOpacity(0.3)),
                 ),
                 child: Center(
                   child: Text(type.emoji,
@@ -520,7 +520,7 @@ class _WideCardState extends State<_WideCard> {
       child: InkWell(
         onTap: widget.onTap,
         borderRadius: BorderRadius.circular(14),
-        splashColor: _kPurple.withValues(alpha: 0.08),
+        splashColor: _kPurple.withOpacity(0.08),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
@@ -537,10 +537,10 @@ class _WideCardState extends State<_WideCard> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: type.color.withValues(alpha: 0.15),
+                      color: type.color.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                          color: type.color.withValues(alpha: 0.3)),
+                          color: type.color.withOpacity(0.3)),
                     ),
                     child: Center(
                       child: Text(type.emoji,
@@ -581,7 +581,7 @@ class _WideCardState extends State<_WideCard> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: type.color.withValues(alpha: 0.15),
+                      color: type.color.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -625,7 +625,7 @@ class _WideCardState extends State<_WideCard> {
                       onPressed: _reportLoading ? null : _viewReport,
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
-                            _kPurple.withValues(alpha: 0.18),
+                            _kPurple.withOpacity(0.18),
                         foregroundColor: _kPurpleLight,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
@@ -743,7 +743,7 @@ class _ResultDetailSheet extends StatelessWidget {
                                         horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: type.color
-                                          .withValues(alpha: 0.18),
+                                          .withOpacity(0.18),
                                       borderRadius:
                                           BorderRadius.circular(20),
                                     ),
@@ -761,7 +761,7 @@ class _ResultDetailSheet extends StatelessWidget {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: _kPink.withValues(alpha: 0.15),
+                                      color: _kPink.withOpacity(0.15),
                                       borderRadius:
                                           BorderRadius.circular(20),
                                     ),
@@ -926,7 +926,7 @@ class _LoadingList extends StatelessWidget {
             .animate(onPlay: (c) => c.repeat())
             .shimmer(
               duration: 1200.ms,
-              color: _kCardBorder.withValues(alpha: 0.6),
+              color: _kCardBorder.withOpacity(0.6),
             ),
       ),
     );
@@ -955,7 +955,7 @@ class _LoadingGrid extends StatelessWidget {
           .animate(onPlay: (c) => c.repeat())
           .shimmer(
             duration: 1200.ms,
-            color: _kCardBorder.withValues(alpha: 0.6),
+            color: _kCardBorder.withOpacity(0.6),
           ),
     );
   }

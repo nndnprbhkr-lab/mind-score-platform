@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MindScorePlatform.Application.DTOs;
 using MindScorePlatform.Application.Interfaces;
 using MindScorePlatform.Domain.Entities;
@@ -30,7 +31,7 @@ public sealed class QuestionService : IQuestionService
         }
 
         var questions = await _questions.GetByTestIdAsync(testId, cancellationToken, ageBandId);
-        return questions.Select(q => new QuestionDto(q.Id, q.TestId, q.Text, q.Order)).ToList();
+        return questions.Select(ToDto).ToList();
     }
 
     public async Task<QuestionDto> CreateAsync(CreateQuestionDto dto, CancellationToken cancellationToken)
@@ -47,6 +48,22 @@ public sealed class QuestionService : IQuestionService
             CreatedAtUtc = DateTime.UtcNow,
         };
         await _questions.AddAsync(question, cancellationToken);
-        return new QuestionDto(question.Id, question.TestId, question.Text, question.Order);
+        return ToDto(question);
     }
+
+    private static QuestionDto ToDto(Question q) => new()
+    {
+        Id = q.Id,
+        TestId = q.TestId,
+        Text = q.Text,
+        Order = q.Order,
+        Code = q.Code,
+        QuestionType = q.QuestionType,
+        ScenarioOptions = q.ScenarioOptionsJson is not null
+            ? JsonSerializer.Deserialize<object>(q.ScenarioOptionsJson)
+            : null,
+        ContextTags = q.ContextTagsJson is not null
+            ? JsonSerializer.Deserialize<List<string>>(q.ContextTagsJson)
+            : null,
+    };
 }

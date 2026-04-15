@@ -113,10 +113,10 @@ class ReportsScreen extends ConsumerWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accent.withValues(alpha: 0.15),
+                                    color: AppColors.accent.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                        color: AppColors.accent.withValues(alpha: 0.4)),
+                                        color: AppColors.accent.withOpacity(0.4)),
                                   ),
                                   child: Text(
                                     typeCode,

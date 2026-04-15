@@ -149,7 +149,7 @@ class _ModuleRow extends StatelessWidget {
                     width: constraints.maxWidth * pct,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [color.withValues(alpha: 0.7), color],
+                        colors: [color.withOpacity(0.7), color],
                       ),
                       borderRadius: BorderRadius.circular(3),
                     ),

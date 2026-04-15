@@ -37,7 +37,7 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: AppColors.primaryMid,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -136,7 +136,7 @@ class AppTheme {
         ),
         textStyle: GoogleFonts.poppins(color: AppColors.textPrimary, fontSize: 14),
       ),
-      dialogTheme: DialogThemeData(
+      dialogTheme: DialogTheme(
         backgroundColor: AppColors.primaryMid,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
