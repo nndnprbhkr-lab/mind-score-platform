@@ -15,8 +15,13 @@ namespace MindScorePlatform.Infrastructure.Persistence;
 ///   _R suffix → IsReverseScored (adjustedScore = 6 − rawValue)
 ///
 /// ── Question GUID ranges ────────────────────────────────────────────────────
-///   00000000-0000-0000-0001-XXXXXXXXXXXX  Universal anchors (Orders 1–20)
-///   00000000-0000-0000-0002-XXXXXXXXXXXX  New context-aware questions (Orders 21–135)
+///   00000000-0000-0000-0001-XXXXXXXXXXXX  Universal anchors    (Orders 1–20)
+///   00000000-0000-0000-0002-XXXXXXXXXXXX  Context-aware + branch targets
+///       Career questions            Orders 21–26
+///       Relationships questions     Orders 30–35
+///       Leadership questions        Orders 40–45
+///       PersonalDevelopment qs.     Orders 50–55
+///       Branch targets (universal)  Orders 500–503
 ///
 /// ── Context tags ────────────────────────────────────────────────────────────
 ///   null                         → served in ALL contexts (General)
@@ -28,8 +33,8 @@ namespace MindScorePlatform.Infrastructure.Persistence;
 /// ── Adaptive branching ──────────────────────────────────────────────────────
 ///   EI_05 (Order 5)  → branches to EI_DEEP_R (introvert) or EI_DEEP_E (extrovert)
 ///   TF_05 (Order 15) → branches to TF_DEEP_V (values)    or TF_DEEP_L (logical)
-///   Branch targets (Orders 21–24) have high Order values so they do not appear
-///   in the linear path unless explicitly branched to.
+///   Branch targets (Orders 500–503) sit above all context question Orders so
+///   they never appear in the linear path — only reached via explicit branching.
 ///
 /// Scale: 1 = Strongly Disagree → 5 = Strongly Agree
 /// </summary>
@@ -252,16 +257,17 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK A — Universal Branch Targets (Orders 21–24)
+        // BLOCK A — Universal Branch Targets (Orders 500–503)
         // Not in the linear path — only served when EI_05 or TF_05 branches.
         // ContextTagsJson = null → eligible in all contexts.
+        // High Order values ensure these never appear during linear fallback.
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000001"),
             TestId = TestId,
             Code = "EI_DEEP_E",
-            Order = 21,
+            Order = 500,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             Text = "When I need to recharge, I gravitate toward busy social events rather than spending time alone.",
@@ -272,7 +278,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000002"),
             TestId = TestId,
             Code = "EI_DEEP_R",
-            Order = 22,
+            Order = 501,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             Text = "Extended periods of solitude feel essential to my wellbeing, even when life is going well.",
@@ -283,7 +289,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000003"),
             TestId = TestId,
             Code = "TF_DEEP_L",
-            Order = 23,
+            Order = 502,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             Text = "When solving problems, I focus on root causes and system efficiency rather than who is affected.",
@@ -294,7 +300,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000004"),
             TestId = TestId,
             Code = "TF_DEEP_V",
-            Order = 24,
+            Order = 503,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             Text = "The emotional impact of a decision on others weighs more heavily on me than its logical merits.",
@@ -302,14 +308,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK B — Career Likert (Orders 100–103)
+        // BLOCK B — Career Likert (Orders 21–24)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000005"),
             TestId = TestId,
             Code = "EI_CAR_01",
-            Order = 100,
+            Order = 21,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Career""]",
@@ -321,7 +327,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000006"),
             TestId = TestId,
             Code = "SN_CAR_01_R",
-            Order = 101,
+            Order = 22,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""Career""]",
@@ -333,7 +339,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000007"),
             TestId = TestId,
             Code = "TF_CAR_01_R",
-            Order = 102,
+            Order = 23,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""Career""]",
@@ -345,7 +351,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000008"),
             TestId = TestId,
             Code = "JP_CAR_01",
-            Order = 103,
+            Order = 24,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Career""]",
@@ -354,14 +360,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK C — Career Scenarios (Orders 104–105)
+        // BLOCK C — Career Scenarios (Orders 25–26)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000009"),
             TestId = TestId,
             Code = "SCEN_CAR_01",
-            Order = 104,
+            Order = 25,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""Career""]",
             Text = "Your team has been asked to recommend a new approach for an ongoing project, but the brief is vague and stakeholders disagree on priorities. You have one week before presenting a proposal, and your manager has delegated the decision to the team. How do you most naturally engage with this situation?",
@@ -373,7 +379,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000010"),
             TestId = TestId,
             Code = "SCEN_CAR_02",
-            Order = 105,
+            Order = 26,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""Career""]",
             Text = "Two important projects are due the same week and you cannot fully deliver both to your usual standard. Your manager leaves the trade-off to you, and neither project has an obvious priority. You have a full day before you need to commit to a plan. What is your most likely response?",
@@ -382,14 +388,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK D — Relationships Likert (Orders 110–113)
+        // BLOCK D — Relationships Likert (Orders 30–33)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000011"),
             TestId = TestId,
             Code = "EI_REL_01",
-            Order = 110,
+            Order = 30,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Relationships""]",
@@ -401,7 +407,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000012"),
             TestId = TestId,
             Code = "SN_REL_01_R",
-            Order = 111,
+            Order = 31,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""Relationships""]",
@@ -413,7 +419,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000013"),
             TestId = TestId,
             Code = "TF_REL_01",
-            Order = 112,
+            Order = 32,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Relationships""]",
@@ -425,7 +431,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000014"),
             TestId = TestId,
             Code = "JP_REL_01_R",
-            Order = 113,
+            Order = 33,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""Relationships""]",
@@ -434,14 +440,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK E — Relationships Scenarios (Orders 114–115)
+        // BLOCK E — Relationships Scenarios (Orders 34–35)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000015"),
             TestId = TestId,
             Code = "SCEN_REL_01",
-            Order = 114,
+            Order = 34,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""Relationships""]",
             Text = "A close friend has grown distant over the past month, cancelling plans and giving short replies. You do not know the cause, and when you last asked, they deflected. You are starting to feel hurt and uncertain whether to press further. What do you most likely do next?",
@@ -453,7 +459,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000016"),
             TestId = TestId,
             Code = "SCEN_REL_02",
-            Order = 115,
+            Order = 35,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""Relationships""]",
             Text = "Your partner has been offered a career opportunity that would require you both to relocate within three months. The move is exciting for them but disruptive for your own career and social life. A decision is needed this weekend. How do you most naturally engage?",
@@ -462,14 +468,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK F — Leadership Likert (Orders 120–123)
+        // BLOCK F — Leadership Likert (Orders 40–43)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000017"),
             TestId = TestId,
             Code = "EI_LEA_01",
-            Order = 120,
+            Order = 40,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Leadership""]",
@@ -481,7 +487,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000018"),
             TestId = TestId,
             Code = "SN_LEA_01",
-            Order = 121,
+            Order = 41,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Leadership""]",
@@ -493,7 +499,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000019"),
             TestId = TestId,
             Code = "TF_LEA_01_R",
-            Order = 122,
+            Order = 42,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""Leadership""]",
@@ -505,7 +511,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000020"),
             TestId = TestId,
             Code = "JP_LEA_01",
-            Order = 123,
+            Order = 43,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""Leadership""]",
@@ -514,14 +520,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK G — Leadership Scenarios (Orders 124–125)
+        // BLOCK G — Leadership Scenarios (Orders 44–45)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000021"),
             TestId = TestId,
             Code = "SCEN_LEA_01",
-            Order = 124,
+            Order = 44,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""Leadership""]",
             Text = "A previously high-performing team member has missed three consecutive deadlines and is withdrawing in meetings. Other teammates are starting to pick up the slack and grumble quietly. You have not yet spoken directly with the person, and a quarterly review is two weeks away. How do you proceed?",
@@ -533,7 +539,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000022"),
             TestId = TestId,
             Code = "SCEN_LEA_02",
-            Order = 125,
+            Order = 45,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""Leadership""]",
             Text = "Your team must choose between two strategic directions for the next quarter, each with incomplete information. One is a proven safe bet with modest gains; the other is an unfamiliar opportunity with bigger potential upside and real risk. A recommendation is due by Friday. How do you approach the choice?",
@@ -542,14 +548,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK H — Personal Development Likert (Orders 130–133)
+        // BLOCK H — Personal Development Likert (Orders 50–53)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000023"),
             TestId = TestId,
             Code = "EI_PD_01_R",
-            Order = 130,
+            Order = 50,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""PersonalDevelopment""]",
@@ -561,7 +567,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000024"),
             TestId = TestId,
             Code = "SN_PD_01",
-            Order = 131,
+            Order = 51,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""PersonalDevelopment""]",
@@ -573,7 +579,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000025"),
             TestId = TestId,
             Code = "TF_PD_01",
-            Order = 132,
+            Order = 52,
             QuestionType = QuestionType.Likert,
             IsReverseScored = false,
             ContextTagsJson = @"[""PersonalDevelopment""]",
@@ -585,7 +591,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000026"),
             TestId = TestId,
             Code = "JP_PD_01_R",
-            Order = 133,
+            Order = 53,
             QuestionType = QuestionType.Likert,
             IsReverseScored = true,
             ContextTagsJson = @"[""PersonalDevelopment""]",
@@ -594,14 +600,14 @@ internal static class MpiSeed
         },
 
         // ────────────────────────────────────────────────────────────────────
-        // BLOCK I — Personal Development Scenarios (Orders 134–135)
+        // BLOCK I — Personal Development Scenarios (Orders 54–55)
         // ────────────────────────────────────────────────────────────────────
         new()
         {
             Id = new Guid("00000000-0000-0000-0002-000000000027"),
             TestId = TestId,
             Code = "SCEN_PD_01",
-            Order = 134,
+            Order = 54,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""PersonalDevelopment""]",
             Text = "You have been feeling stuck in a recurring personal pattern — one that surfaces in work, relationships, and your own self-talk. You have noticed it clearly this week and know you want to address it. You have a free weekend ahead to work on it. What do you most naturally reach for?",
@@ -613,7 +619,7 @@ internal static class MpiSeed
             Id = new Guid("00000000-0000-0000-0002-000000000028"),
             TestId = TestId,
             Code = "SCEN_PD_02",
-            Order = 135,
+            Order = 55,
             QuestionType = QuestionType.Scenario,
             ContextTagsJson = @"[""PersonalDevelopment""]",
             Text = "You have decided to make a significant lifestyle change — a new sleep schedule, exercise routine, and reading practice — starting next month. You have three weeks to prepare. You know from experience that some change strategies work better for you than others. How do you set yourself up?",
