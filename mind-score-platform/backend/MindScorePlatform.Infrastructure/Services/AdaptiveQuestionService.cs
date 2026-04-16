@@ -13,17 +13,19 @@ namespace MindScorePlatform.Infrastructure.Services;
 /// Algorithm:
 ///   1. Load all eligible questions for the test + context + age band.
 ///   2. Build a set of already-answered question IDs.
-///   3. If no answers yet → return the first anchor question (lowest Order).
-///   4. If the last answered question has branching rules:
+///   3. Build answered-values map for branching evaluation.
+///   4. Hard stop: if answered count ≥ per-context target → mark complete.
+///   5. If no answers yet → return the first anchor question (lowest Order).
+///   6. Try branching from the last answered question:
+///   7. If the last answered question has branching rules:
 ///      a. Evaluate each condition against the answer value.
 ///      b. If a condition matches → fetch the branch target by Code.
 ///      c. If the branch target is already answered → fall through to linear.
-///   5. Linear fallback → return the next unanswered question by Order,
-///      skipping questions that are branch-only targets (not yet answered via branching).
-///   6. If no more unanswered questions → mark IsComplete = true.
+///   8. Linear fallback → return the next unanswered question by Order.
+///   9. If no more unanswered questions → mark IsComplete = true.
 ///
-/// Completion threshold: the session is complete when all non-branch-only questions
-/// are answered, OR when the answered count reaches the per-context target.
+/// Completion threshold: answered count reaches the per-context target (step 4),
+/// OR the question pool is fully exhausted (step 9).
 /// </summary>
 public sealed class AdaptiveQuestionService : IAdaptiveQuestionService
 {
@@ -77,14 +79,21 @@ public sealed class AdaptiveQuestionService : IAdaptiveQuestionService
         var answeredValues = request.AnsweredSoFar
             .ToDictionary(a => a.QuestionId, a => a.Value);
 
-        // ── 4. First question ─────────────────────────────────────────────────
+        // ── 4. Hard stop at per-context target ────────────────────────────────
+        // Prevents the engine from over-serving when the pool is larger than the
+        // target (e.g. 26 questions in pool, target = 20 for General).
+        var target = _targetCounts.GetValueOrDefault(request.Context, 20);
+        if (answeredIds.Count >= target)
+            return Complete(answeredIds.Count, request.Context);
+
+        // ── 6. First question ─────────────────────────────────────────────────
         if (answeredIds.Count == 0)
         {
             var first = allQuestions.MinBy(q => q.Order)!;
             return BuildResponse(first, answeredIds.Count, request.Context, allQuestions.Count);
         }
 
-        // ── 5. Try branching from the last answered question ──────────────────
+        // ── 7. Try branching from the last answered question ──────────────────
         var lastAnsweredId = request.AnsweredSoFar.Last().QuestionId;
         var lastQuestion = allQuestions.FirstOrDefault(q => q.Id == lastAnsweredId);
 
@@ -101,7 +110,7 @@ public sealed class AdaptiveQuestionService : IAdaptiveQuestionService
                 return BuildResponse(branchTarget, answeredIds.Count, request.Context, allQuestions.Count);
         }
 
-        // ── 6. Linear fallback — next unanswered question by Order ───────────
+        // ── 8. Linear fallback — next unanswered question by Order ───────────
         var next = allQuestions
             .Where(q => !answeredIds.Contains(q.Id))
             .OrderBy(q => q.Order)
