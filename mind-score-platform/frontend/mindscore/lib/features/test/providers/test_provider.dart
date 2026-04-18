@@ -344,7 +344,11 @@ class TestNotifier extends StateNotifier<TestState> {
 
       final json = await ApiClient.post(
         '${ApiConstants.responses}/submit',
-        {'testId': state.testId, 'answers': answers},
+        {
+          'testId': state.testId,
+          'answers': answers,
+          'context': state.context.apiValue,
+        },
         auth: true,
       );
       final result = ResultModel.fromJson(json);

@@ -9,4 +9,5 @@ public interface IResultRepository
     Task<Result?> GetByUserAndTestAsync(Guid userId, Guid testId, CancellationToken cancellationToken);
     Task AddAsync(Result result, CancellationToken cancellationToken);
     Task AddOrReplaceAsync(Result result, CancellationToken cancellationToken);
+    Task UpdateFollowUpAsync(Guid id, string aiFollowUpJson, CancellationToken cancellationToken);
 }

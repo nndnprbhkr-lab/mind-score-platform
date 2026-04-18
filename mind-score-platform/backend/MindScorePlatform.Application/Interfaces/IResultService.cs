@@ -32,4 +32,13 @@ public interface IResultService
     /// <exception cref="KeyNotFoundException">Thrown when no result matches the ID and userId combination.</exception>
     Task<ResultDto> GetByIdAsync(
         Guid id, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores the user's answers to AI-generated follow-up questions against the given result.
+    /// </summary>
+    /// <exception cref="KeyNotFoundException">Result not found.</exception>
+    /// <exception cref="UnauthorizedAccessException">Result belongs to a different user.</exception>
+    /// <exception cref="InvalidOperationException">No follow-up questions exist on this result.</exception>
+    Task<ResultDto> SubmitFollowUpAsync(
+        Guid resultId, Guid userId, SubmitFollowUpDto dto, CancellationToken cancellationToken);
 }

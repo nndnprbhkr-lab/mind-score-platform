@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MindScorePlatform.Application.DTOs;
 using MindScorePlatform.Application.Interfaces;
 
 namespace MindScorePlatform.WebApi.Controllers.Results;
@@ -27,6 +28,15 @@ public sealed class ResultsController : ControllerBase
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var result = await _results.GetByIdAsync(id, userId, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/follow-up")]
+    public async Task<IActionResult> SubmitFollowUp(
+        Guid id, [FromBody] SubmitFollowUpDto dto, CancellationToken cancellationToken)
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var result = await _results.SubmitFollowUpAsync(id, userId, dto, cancellationToken);
         return Ok(result);
     }
 }

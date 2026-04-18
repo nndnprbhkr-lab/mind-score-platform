@@ -43,6 +43,9 @@ public static class DependencyInjection
         services.AddScoped<IResultRepository, ResultRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
 
+        services.AddHttpClient();
+        services.AddScoped<IAiFollowUpService, AiFollowUpService>();
+
         services.AddScoped<ITestService, TestService>();
         services.AddScoped<IQuestionService, QuestionService>();
         services.AddScoped<IAdaptiveQuestionService, AdaptiveQuestionService>();

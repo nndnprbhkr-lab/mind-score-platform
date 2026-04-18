@@ -30,6 +30,8 @@ import '../../../widgets/mpi/mpi_legend_header.dart';
 import '../../../widgets/mpi/mpi_radar_chart.dart';
 import '../../../widgets/mpi/mpi_dimension_row.dart';
 import '../../../widgets/mpi/mpi_action_plan_card.dart';
+import '../../test/screens/mpi_follow_up_screen.dart';
+import '../providers/results_provider.dart';
 
 // ─── _MpiDisplayData ─────────────────────────────────────────────────────────
 
@@ -495,6 +497,13 @@ class _MobileLayout extends StatelessWidget {
           _ShareButton(onTap: onShare)
               .animate(delay: 320.ms)
               .fadeIn(duration: 300.ms),
+
+          const SizedBox(height: 12),
+
+          Consumer(builder: (context, ref, _) {
+            final result = ref.watch(testProvider).result;
+            return _FollowUpBanner(result: result, ref: ref);
+          }).animate(delay: 360.ms).fadeIn(duration: 300.ms),
         ],
       ),
     );
@@ -1056,6 +1065,94 @@ class _ShareButton extends StatelessWidget {
         label: const Text(
           'Share Results',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Follow-up banner ─────────────────────────────────────────────────────────
+
+/// Banner shown at the bottom of the results screen when AI-generated
+/// follow-up questions are available but not yet answered.
+///
+/// Hidden when: result is null, aiFollowUp is null, or answers already exist.
+class _FollowUpBanner extends StatelessWidget {
+  final ResultModel? result;
+  final WidgetRef ref;
+
+  const _FollowUpBanner({required this.result, required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    if (result == null) return const SizedBox.shrink();
+
+    final followUp = result!.aiFollowUp;
+    if (followUp == null) return const SizedBox.shrink();
+
+    final questions = followUp['questions'] as List<dynamic>? ?? [];
+    final answers   = followUp['answers']   as List<dynamic>? ?? [];
+    final tensions  = followUp['tensions']  as List<dynamic>? ?? [];
+
+    if (questions.isEmpty || answers.isNotEmpty) return const SizedBox.shrink();
+
+    final count = tensions.length;
+    final label = count == 1
+        ? '1 dimension needs clarification'
+        : '$count dimensions need clarification';
+
+    return GestureDetector(
+      onTap: () async {
+        final qs = questions.cast<Map<String, dynamic>>();
+        final popped = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => MpiFollowUpScreen(
+              resultId:  result!.id,
+              questions: qs,
+            ),
+          ),
+        );
+        if (popped == true) {
+          ref.read(resultsProvider.notifier).load();
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF6B35C8), Color(0xFFA67CF0)],
+          ),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            const Text('✨', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Refine Your Profile',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white70,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.white70, size: 16),
+          ],
         ),
       ),
     );

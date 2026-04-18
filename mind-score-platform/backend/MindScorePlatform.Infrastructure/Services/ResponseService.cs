@@ -3,6 +3,7 @@ using MindScorePlatform.Application.DTOs;
 using MindScorePlatform.Application.Interfaces;
 using MindScorePlatform.Domain.Entities;
 using MindScorePlatform.Infrastructure.Persistence;
+using MindScorePlatform.Infrastructure.Services.Mpi;
 
 namespace MindScorePlatform.Infrastructure.Services;
 
@@ -43,13 +44,14 @@ public sealed class ResponseService : IResponseService
     private static readonly JsonSerializerOptions CamelCase =
         new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    private readonly IResponseRepository _responses;
-    private readonly IResultRepository   _results;
-    private readonly ITestRepository     _tests;
-    private readonly IQuestionRepository _questions;
-    private readonly IMpiScoringEngine   _mpiEngine;
-    private readonly IMindScoringEngine  _mindEngine;
-    private readonly AppDbContext        _db;
+    private readonly IResponseRepository  _responses;
+    private readonly IResultRepository    _results;
+    private readonly ITestRepository      _tests;
+    private readonly IQuestionRepository  _questions;
+    private readonly IMpiScoringEngine    _mpiEngine;
+    private readonly IMindScoringEngine   _mindEngine;
+    private readonly IAiFollowUpService   _aiFollowUp;
+    private readonly AppDbContext         _db;
 
     public ResponseService(
         IResponseRepository responses,
@@ -58,15 +60,17 @@ public sealed class ResponseService : IResponseService
         IQuestionRepository questions,
         IMpiScoringEngine mpiEngine,
         IMindScoringEngine mindEngine,
+        IAiFollowUpService aiFollowUp,
         AppDbContext db)
     {
-        _responses = responses;
-        _results   = results;
-        _tests     = tests;
-        _questions = questions;
-        _mpiEngine = mpiEngine;
+        _responses  = responses;
+        _results    = results;
+        _tests      = tests;
+        _questions  = questions;
+        _mpiEngine  = mpiEngine;
         _mindEngine = mindEngine;
-        _db        = db;
+        _aiFollowUp = aiFollowUp;
+        _db         = db;
     }
 
     /// <inheritdoc/>
@@ -110,6 +114,12 @@ public sealed class ResponseService : IResponseService
 
         var mpiResult = _mpiEngine.Score(scoringInputs);
 
+        // Detect tensions and compute dimension confidence scores.
+        var (_, confidence) = TensionDetector.Detect(mpiResult.Dimensions);
+
+        // Generate AI follow-up questions for ambiguous dimensions (silently skipped on failure).
+        var followUp = await _aiFollowUp.GenerateAsync(mpiResult.Dimensions, ct);
+
         var insightsPayload = new
         {
             strengths          = mpiResult.Strengths,
@@ -121,17 +131,22 @@ public sealed class ResponseService : IResponseService
 
         var result = new Result
         {
-            Id                  = Guid.NewGuid(),
-            UserId              = userId,
-            TestId              = dto.TestId,
-            Score               = mpiResult.OverallScore,
-            PersonalityType     = mpiResult.TypeCode,
-            PersonalityName     = mpiResult.TypeName,
-            PersonalityEmoji    = mpiResult.Emoji,
-            PersonalityTagline  = mpiResult.Tagline,
-            DimensionScoresJson = JsonSerializer.Serialize(mpiResult.Dimensions, CamelCase),
-            InsightsJson        = JsonSerializer.Serialize(insightsPayload, CamelCase),
-            CreatedAtUtc        = DateTime.UtcNow,
+            Id                      = Guid.NewGuid(),
+            UserId                  = userId,
+            TestId                  = dto.TestId,
+            Score                   = mpiResult.OverallScore,
+            PersonalityType         = mpiResult.TypeCode,
+            PersonalityName         = mpiResult.TypeName,
+            PersonalityEmoji        = mpiResult.Emoji,
+            PersonalityTagline      = mpiResult.Tagline,
+            DimensionScoresJson     = JsonSerializer.Serialize(mpiResult.Dimensions, CamelCase),
+            InsightsJson            = JsonSerializer.Serialize(insightsPayload, CamelCase),
+            Context                 = dto.Context,
+            DimensionConfidenceJson = JsonSerializer.Serialize(confidence, CamelCase),
+            AiFollowUpJson          = followUp is not null
+                                          ? JsonSerializer.Serialize(followUp, CamelCase)
+                                          : null,
+            CreatedAtUtc            = DateTime.UtcNow,
         };
 
         await _results.AddOrReplaceAsync(result, ct);
@@ -241,29 +256,33 @@ public sealed class ResponseService : IResponseService
     /// </summary>
     internal static ResultDto ToDto(Result result, string testName)
     {
-        object? dimensions = null;
-        object? insights   = null;
+        static object? Deserialize(string? json) =>
+            string.IsNullOrEmpty(json) ? null : JsonSerializer.Deserialize<object>(json);
 
-        if (!string.IsNullOrEmpty(result.DimensionScoresJson))
-            dimensions = JsonSerializer.Deserialize<object>(result.DimensionScoresJson);
-
-        if (!string.IsNullOrEmpty(result.InsightsJson))
-            insights = JsonSerializer.Deserialize<object>(result.InsightsJson);
+        static IReadOnlyList<string>? DeserializeStringList(string? json) =>
+            string.IsNullOrEmpty(json)
+                ? null
+                : JsonSerializer.Deserialize<List<string>>(json);
 
         return new ResultDto
         {
-            Id             = result.Id,
-            UserId         = result.UserId,
-            TestId         = result.TestId,
-            TestName       = testName,
-            Score          = result.Score,
-            TypeCode       = result.PersonalityType,
-            TypeName       = result.PersonalityName,
-            Emoji          = result.PersonalityEmoji,
-            Tagline        = result.PersonalityTagline,
-            DimensionScores = dimensions,
-            Insights       = insights,
-            CreatedAtUtc   = result.CreatedAtUtc,
+            Id                  = result.Id,
+            UserId              = result.UserId,
+            TestId              = result.TestId,
+            TestName            = testName,
+            Score               = result.Score,
+            TypeCode            = result.PersonalityType,
+            TypeName            = result.PersonalityName,
+            Emoji               = result.PersonalityEmoji,
+            Tagline             = result.PersonalityTagline,
+            DimensionScores     = Deserialize(result.DimensionScoresJson),
+            Insights            = Deserialize(result.InsightsJson),
+            Context             = result.Context,
+            ContextInsights     = Deserialize(result.ContextInsightsJson),
+            AdaptivePath        = DeserializeStringList(result.AdaptivePathJson),
+            AiFollowUp          = Deserialize(result.AiFollowUpJson),
+            DimensionConfidence = Deserialize(result.DimensionConfidenceJson),
+            CreatedAtUtc        = result.CreatedAtUtc,
         };
     }
 
