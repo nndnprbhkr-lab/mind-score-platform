@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -147,6 +148,11 @@ class _SoloMobileLayout extends StatelessWidget {
           )
               .animate(delay: 200.ms)
               .fadeIn(duration: 350.ms),
+        const SizedBox(height: 24),
+        const _InvitePartnerBanner()
+            .animate(delay: 260.ms)
+            .fadeIn(duration: 350.ms)
+            .slideY(begin: 0.06, end: 0),
       ],
     );
   }
@@ -240,6 +246,10 @@ class _SoloDesktopLayout extends StatelessWidget {
                   )
                       .animate(delay: 160.ms)
                       .fadeIn(duration: 350.ms),
+                const SizedBox(height: 16),
+                const _InvitePartnerBanner()
+                    .animate(delay: 220.ms)
+                    .fadeIn(duration: 350.ms),
               ],
             ),
           ),
@@ -794,6 +804,83 @@ class _BlindSpotsCard extends StatelessWidget {
                 height: 1.45,
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InvitePartnerBanner extends StatelessWidget {
+  const _InvitePartnerBanner();
+
+  static const _assessmentUrl = 'https://mind-score.com';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A1850),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFF3D2070)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('💑', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 10),
+              Text(
+                'Compare with your partner',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Ask your partner to take this assessment. When both complete it, you\'ll unlock your compatibility score.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () async {
+                await Clipboard.setData(const ClipboardData(text: _assessmentUrl));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Link copied!'),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.link_rounded, size: 16),
+              label: const Text('Share Assessment'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.highlight,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
