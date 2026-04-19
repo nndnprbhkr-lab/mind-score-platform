@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Dynamics Assessment - UI/UX Design Options</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-tabs button {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: #2c3e50;
+        }
+
+        .nav-tabs button:hover {
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .nav-tabs button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .option-container {
+            display: none;
+        }
+
+        .option-container.active {
+            display: block;
+        }
+
+        .option-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .devices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 1000px) {
+            .devices {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .device {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .device-label {
+            background: #34495e;
+            color: white;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .phone-frame {
+            width: 100%;
+            aspect-ratio: 9/16;
+            background: #000;
+            border-radius: 30px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .phone-notch {
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 8px;
+        }
+
+        .phone-screen {
+            flex: 1;
+            background: #f5f7fa;
+            border-radius: 24px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .desktop-frame {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #f5f7fa;
+            border-radius: 12px;
+            border: 1px solid #e0e6ed;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* OPTION 1: SLIDER */
+        .option1-phone {
+            background: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 36%;
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+            text-align: center;
+            margin: 30px 0;
+            line-height: 1.5;
+        }
+
+        .slider-container {
+            margin: 30px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .slider-emoji {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dbdb;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        /* OPTION 2: CARDS */
+        .card-container {
+            background: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .section-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 8px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            color: #7f8c8d;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #f5f7fa, #ffffff);
+            border: 1px solid #ecf0f1;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card-question {
+            font-size: 16px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .option-button {
+            padding: 14px;
+            margin-bottom: 10px;
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #2c3e50;
+        }
+
+        .option-button:hover {
+            border-color: #3498db;
+            background: #ecf7ff;
+        }
+
+        .option-button.selected {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        /* OPTION 3: DRAG DROP */
+        .drag-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .column {
+            padding: 15px;
+            background: #f0f3f7;
+            border-radius: 8px;
+            border: 2px dashed #bdc3c7;
+            min-height: 80px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        .draggable-item {
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: move;
+            border: 1px solid #e0e6ed;
+            font-size: 13px;
+            color: #2c3e50;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .draggable-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        /* OPTION 4: EMOTION WHEEL */
+        .wheel-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .emotion-wheel {
+            font-size: 32px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .emotion-option {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .emotion-option:hover {
+            transform: scale(1.15);
+            background: #ecf0f1;
+        }
+
+        .emotion-option.selected {
+            border-color: #3498db;
+            background: #ebf5fb;
+            transform: scale(1.2);
+        }
+
+        .scale-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        /* OPTION 5: PROGRESSIVE */
+        .progressive-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-indicator {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+
+        .section-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ecf0f1;
+        }
+
+        .section-dot.active {
+            background: #3498db;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .info-box {
+            background: #ecf7ff;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #2980b9;
+            margin-bottom: 15px;
+        }
+
+        /* OPTION 6: FORCED CHOICE */
+        .comparison-container {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .choice-prompt {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .ab-comparison {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .choice-card {
+            flex: 1;
+            padding: 15px;
+            background: #f0f3f7;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: #2c3e50;
+            line-height: 1.4;
+        }
+
+        .choice-card:hover {
+            border-color: #3498db;
+            background: #ecf7ff;
+        }
+
+        .choice-card.selected {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+            transform: scale(1.05);
+        }
+
+        .vs-label {
+            flex: 0.3;
+            text-align: center;
+            font-weight: 700;
+            color: #e74c3c;
+            font-size: 16px;
+        }
+
+        .description {
+            background: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .pros, .cons {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .pros {
+            border-left-color: #2ecc71;
+        }
+
+        .cons {
+            border-left-color: #e74c3c;
+        }
+
+        .pros h4, .cons h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .pros h4 {
+            color: #27ae60;
+        }
+
+        .cons h4 {
+            color: #c0392b;
+        }
+
+        .pros ul, .cons ul {
+            list-style: none;
+            font-size: 11px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .pros li:before {
+            content: "✓ ";
+            color: #2ecc71;
+            font-weight: 600;
+        }
+
+        .cons li:before {
+            content: "✗ ";
+            color: #e74c3c;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Relationship Dynamics Assessment</h1>
+        <p class="subtitle">Interactive UI/UX Design Options</p>
+
+        <div class="nav-tabs">
+            <button class="active" onclick="showOption('option1')">1. Slider</button>
+            <button onclick="showOption('option2')">2. Cards</button>
+            <button onclick="showOption('option3')">3. Drag-Drop</button>
+            <button onclick="showOption('option4')">4. Emotion Wheel</button>
+            <button onclick="showOption('option5')">5. Progressive</button>
+            <button onclick="showOption('option6')">6. Forced Choice</button>
+        </div>
+
+        <!-- OPTION 1: SLIDER -->
+        <div id="option1" class="option-container active">
+            <div class="option-title">🎚️ Option 1: Interactive Slider with Emotion Visualization</div>
+            <div class="description">
+                <strong>Experience:</strong> Smooth slider drag with emotional anchors (happy/sad faces). Color feedback from red → yellow → green. Haptic vibration on mobile. Swipe-based navigation.
+            </div>
+
+            <div class="devices">
+                <!-- Mobile -->
+                <div class="device">
+                    <div class="device-label">📱 Mobile (375px)</div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="option1-phone">
+                                <div class="header">
+                                    <div class="header-title">Relationship Dynamics</div>
+                                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 4px;">8 / 22</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                </div>
+
+                                <div class="question-text">
+                                    I feel secure in my relationships.
+                                </div>
+
+                                <div class="slider-container">
+                                    <div class="slider-labels">
+                                        <span>Disagree</span>
+                                        <span>Agree</span>
+                                    </div>
+                                    <div class="slider-emoji">
+                                        <span>😢</span>
+                                        <span>😊</span>
+                                    </div>
+                                    <input type="range" min="1" max="5" value="3" class="slider" style="width: 100%;">
+                                    <div style="text-align: center; margin-top: 12px; font-size: 12px; color: #7f8c8d;">
+                                        Your answer: 3 / 5 (Neutral)
+                                    </div>
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop -->
+                <div class="device">
+                    <div class="device-label">🖥️ Desktop (1280px)</div>
+                    <div class="desktop-frame">
+                        <div class="screen-content">
+                            <div style="max-width: 600px; width: 100%;">
+                                <div class="header">
+                                    <div class="header-title">Question 8 of 22 - Attachment Security</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                </div>
+
+                                <div class="question-text" style="margin-top: 40px;">
+                                    I feel secure in my relationships.
+                                </div>
+
+                                <div class="slider-container" style="margin: 50px 0;">
+                                    <div class="slider-labels">
+                                        <span>Strongly Disagree</span>
+                                        <span>Neutral</span>
+                                        <span>Strongly Agree</span>
+                                    </div>
+                                    <div class="slider-emoji" style="font-size: 28px;">
+                                        <span>😢</span>
+                                        <span>😐</span>
+                                        <span>😊</span>
+                                    </div>
+                                    <input type="range" min="1" max="5" value="3" class="slider" style="width: 100%;">
+                                </div>
+
+                                <div class="buttons" style="margin-top: 50px;">
+                                    <button class="btn btn-secondary">← Previous</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✓ Advantages</h4>
+                    <ul>
+                        <li>Mobile-optimized touch</li>
+                        <li>Fast interactions</li>
+                        <li>Emotional anchors resonate</li>
+                        <li>Color feedback intuitive</li>
+                        <li>Haptic feedback engaging</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>✗ Drawbacks</h4>
+                    <ul>
+                        <li>Desktop UX less ideal</li>
+                        <li>Slider precision on mobile</li>
+                        <li>Risk of "playing" with slider</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPTION 2: CARDS -->
+        <div id="option2" class="option-container">
+            <div class="option-title">🎴 Option 2: Card-Based Conversation UI</div>
+            <div class="description">
+                <strong>Experience:</strong> One question per card. Large touch targets. Smooth transitions. Progress indicator. No distractions.
+            </div>
+
+            <div class="devices">
+                <!-- Mobile -->
+                <div class="device">
+                    <div class="device-label">📱 Mobile (375px)</div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="card-container">
+                                <div class="section-tabs">
+                                    <div class="tab active">✓ Attach</div>
+                                    <div class="tab">Conflict</div>
+                                    <div class="tab">Express</div>
+                                    <div class="tab">Love</div>
+                                </div>
+
+                                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                                    <div class="card">
+                                        <div class="card-question">
+                                            I feel secure in my relationships.
+                                        </div>
+                                    </div>
+
+                                    <div class="option-button">Strongly Disagree</div>
+                                    <div class="option-button">Disagree</div>
+                                    <div class="option-button selected">Neutral ✓</div>
+                                    <div class="option-button">Agree</div>
+                                    <div class="option-button">Strongly Agree</div>
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">↑ Previous</button>
+                                    <button class="btn btn-primary">Next ↓</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop -->
+                <div class="device">
+                    <div class="device-label">🖥️ Desktop (1280px)</div>
+                    <div class="desktop-frame">
+                        <div class="screen-content">
+                            <div style="max-width: 600px; width: 100%;">
+                                <div class="header">
+                                    <div class="header-title">Question 2 of 6 - Attachment Security</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 33%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="card" style="margin: 40px 0; min-height: 200px;">
+                                    <div class="card-question">
+                                        I feel secure in my relationships.
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px;">
+                                    <button class="option-button">Strongly Disagree</button>
+                                    <button class="option-button">Disagree</button>
+                                    <button class="option-button selected">Neutral ✓</button>
+                                    <button class="option-button">Agree</button>
+                                    <button class="option-button">Strongly Agree</button>
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✓ Advantages</h4>
+                    <ul>
+                        <li>Clean, focused interface</li>
+                        <li>Large touch targets</li>
+                        <li>One question = one task</li>
+                        <li>Low cognitive load</li>
+                        <li>Highly accessible</li>
+                        <li>Works on all devices</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>✗ Drawbacks</h4>
+                    <ul>
+                        <li>Feels slower subjectively</li>
+                        <li>No question overview</li>
+                        <li>More taps to navigate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPTION 3: DRAG-DROP -->
+        <div id="option3" class="option-container">
+            <div class="option-title">🎯 Option 3: Drag-and-Drop Matrix</div>
+            <div class="description">
+                <strong>Experience:</strong> Drag statement cards into agreement columns. See patterns across related questions. Reorderable. Engaging game-like feel.
+            </div>
+
+            <div class="devices">
+                <!-- Mobile -->
+                <div class="device">
+                    <div class="device-label">📱 Mobile (375px)</div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="drag-container">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <div style="font-size: 12px; color: #7f8c8d; font-weight: 600;">Drag statements into columns</div>
+                                    <div style="font-size: 11px; color: #95a5a6;">Question 5 of 6</div>
+                                </div>
+
+                                <div style="display: flex; gap: 8px; margin-bottom: 15px; font-size: 10px;">
+                                    <div style="flex: 1; text-align: center; color: #e74c3c; font-weight: 600;">Disagree</div>
+                                    <div style="flex: 1; text-align: center; color: #f39c12; font-weight: 600;">Neutral</div>
+                                    <div style="flex: 1; text-align: center; color: #2ecc71; font-weight: 600;">Agree</div>
+                                </div>
+
+                                <div style="display: flex; gap: 8px;">
+                                    <div class="column" style="flex: 1; color: #e74c3c;">
+                                        <div class="draggable-item" style="background: #fee; border-color: #e74c3c;">I worry about...</div>
+                                    </div>
+                                    <div class="column" style="flex: 1; color: #f39c12;">
+                                    </div>
+                                    <div class="column" style="flex: 1; color: #2ecc71;">
+                                        <div class="draggable-item" style="background: #efe; border-color: #2ecc71;">I feel secure...</div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 20px;">
+                                    <div class="draggable-item">I trust my partner...</div>
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop -->
+                <div class="device">
+                    <div class="device-label">🖥️ Desktop (1280px)</div>
+                    <div class="desktop-frame">
+                        <div class="screen-content">
+                            <div style="max-width: 800px; width: 100%;">
+                                <div class="header" style="margin-bottom: 30px;">
+                                    <div class="header-title">Drag statements to rate your agreement</div>
+                                </div>
+
+                                <div style="display: flex; gap: 20px;">
+                                    <div style="flex: 1;">
+                                        <div style="text-align: center; font-weight: 600; color: #e74c3c; margin-bottom: 10px;">Strongly Disagree</div>
+                                        <div class="column" style="height: 200px;">
+                                            <div class="draggable-item" style="background: #fee; border-color: #e74c3c;">I worry about being abandoned</div>
+                                        </div>
+                                    </div>
+
+                                    <div style="flex: 1;">
+                                        <div style="text-align: center; font-weight: 600; color: #f39c12; margin-bottom: 10px;">Neutral</div>
+                                        <div class="column" style="height: 200px;">
+                                        </div>
+                                    </div>
+
+                                    <div style="flex: 1;">
+                                        <div style="text-align: center; font-weight: 600; color: #2ecc71; margin-bottom: 10px;">Strongly Agree</div>
+                                        <div class="column" style="height: 200px;">
+                                            <div class="draggable-item" style="background: #efe; border-color: #2ecc71;">I feel secure</div>
+                                            <div class="draggable-item" style="background: #efe; border-color: #2ecc71;">I trust my partner</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="buttons" style="margin-top: 30px;">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✓ Advantages</h4>
+                    <ul>
+                        <li>Comparative viewing</li>
+                        <li>See patterns emerge</li>
+                        <li>Game-like engagement</li>
+                        <li>Faster batch answering</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>✗ Drawbacks</h4>
+                    <ul>
+                        <li>Complex implementation</li>
+                        <li>Poor mobile UX</li>
+                        <li>Accessibility challenges</li>
+                        <li>Risk of gaming system</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPTION 4: EMOTION WHEEL -->
+        <div id="option4" class="option-container">
+            <div class="option-title">🎡 Option 4: Emotion Wheel Radial Selection</div>
+            <div class="description">
+                <strong>Experience:</strong> Select emotion by tapping emoji. Intuitive 2D space. One-tap response. Gamified feel.
+            </div>
+
+            <div class="devices">
+                <!-- Mobile -->
+                <div class="device">
+                    <div class="device-label">📱 Mobile (375px)</div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="wheel-container">
+                                <div style="text-align: center; width: 100%;">
+                                    <div style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">Question 5 of 22</div>
+                                    <div class="question-text">I feel anxious when apart from my partner.</div>
+                                </div>
+
+                                <div>
+                                    <div class="scale-label">How much do you agree?</div>
+                                    <div class="emotion-wheel">
+                                        <div class="emotion-option">😢</div>
+                                        <div class="emotion-option">😟</div>
+                                        <div class="emotion-option selected">😐</div>
+                                        <div class="emotion-option">🙂</div>
+                                        <div class="emotion-option">😊</div>
+                                    </div>
+                                </div>
+
+                                <div style="text-align: center; font-size: 12px; color: #3498db; font-weight: 600;">
+                                    ✓ Selected: Neutral (😐)
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop -->
+                <div class="device">
+                    <div class="device-label">🖥️ Desktop (1280px)</div>
+                    <div class="desktop-frame">
+                        <div class="screen-content">
+                            <div style="max-width: 600px; width: 100%;">
+                                <div class="header">
+                                    <div class="header-title">Question 5 of 22</div>
+                                </div>
+
+                                <div class="question-text" style="margin: 40px 0;">
+                                    I feel anxious when apart from my partner.
+                                </div>
+
+                                <div style="text-align: center;">
+                                    <div class="scale-label" style="margin-bottom: 30px;">How much do you agree?</div>
+                                    <div class="emotion-wheel" style="font-size: 48px; gap: 20px;">
+                                        <div class="emotion-option">😢</div>
+                                        <div class="emotion-option">😟</div>
+                                        <div class="emotion-option selected">😐</div>
+                                        <div class="emotion-option">🙂</div>
+                                        <div class="emotion-option">😊</div>
+                                    </div>
+                                </div>
+
+                                <div style="text-align: center; font-size: 14px; color: #3498db; font-weight: 600; margin: 40px 0;">
+                                    ✓ Selected: Neutral (😐)
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✓ Advantages</h4>
+                    <ul>
+                        <li>Unique & novel</li>
+                        <li>Emoji intuitive</li>
+                        <li>Gamified feel</li>
+                        <li>Fast selection</li>
+                        <li>High engagement</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>✗ Drawbacks</h4>
+                    <ul>
+                        <li>Learning curve</li>
+                        <li>Emoji choice matters</li>
+                        <li>May feel gimmicky</li>
+                        <li>Complex to implement</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPTION 5: PROGRESSIVE -->
+        <div id="option5" class="option-container">
+            <div class="option-title">📚 Option 5: Progressive Disclosure + Smart Branching</div>
+            <div class="description">
+                <strong>Experience:</strong> Organized by section. Expandable definitions. Smart skip logic. Educational tooltips.
+            </div>
+
+            <div class="devices">
+                <!-- Mobile -->
+                <div class="device">
+                    <div class="device-label">📱 Mobile (375px)</div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="progressive-container">
+                                <div style="text-align: center;">
+                                    <div style="font-weight: 600; color: #2c3e50; margin-bottom: 8px;">Attachment Security</div>
+                                    <div class="section-indicator">
+                                        <div class="section-dot active"></div>
+                                        <div class="section-dot"></div>
+                                        <div class="section-dot"></div>
+                                        <div class="section-dot"></div>
+                                    </div>
+                                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">2 / 6</div>
+                                </div>
+
+                                <div class="info-box">
+                                    💡 Secure attachment means feeling safe and trusting your partner.
+                                    <div style="margin-top: 8px; cursor: pointer; font-weight: 600;">Learn more ▼</div>
+                                </div>
+
+                                <div class="question-text">
+                                    I feel secure in my relationships.
+                                </div>
+
+                                <div>
+                                    <div class="option-button">Strongly Disagree</div>
+                                    <div class="option-button">Disagree</div>
+                                    <div class="option-button selected">Neutral ✓</div>
+                                    <div class="option-button">Agree</div>
+                                    <div class="option-button">Strongly Agree</div>
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">Skip</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop -->
+                <div class="device">
+                    <div class="device-label">🖥️ Desktop (1280px)</div>
+                    <div class="desktop-frame">
+                        <div class="screen-content">
+                            <div style="max-width: 600px; width: 100%;">
+                                <div class="header">
+                                    <div class="header-title">Attachment Security (2 of 6)</div>
+                                    <div style="display: flex; gap: 4px; justify-content: center; margin-top: 10px;">
+                                        <div style="width: 8px; height: 8px; background: #3498db; border-radius: 50%;"></div>
+                                        <div style="width: 8px; height: 8px; background: #ecf0f1; border-radius: 50%;"></div>
+                                        <div style="width: 8px; height: 8px; background: #ecf0f1; border-radius: 50%;"></div>
+                                        <div style="width: 8px; height: 8px; background: #ecf0f1; border-radius: 50%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="info-box" style="margin: 30px 0;">
+                                    💡 <strong>Secure Attachment:</strong> Feeling safe, trusting your partner, seeking connection.
+                                    <div style="margin-top: 10px; cursor: pointer; font-weight: 600; color: #2980b9;">Learn more ▼</div>
+                                </div>
+
+                                <div class="question-text" style="margin: 30px 0;">
+                                    I feel secure in my relationships.
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 10px; margin: 30px 0;">
+                                    <button class="option-button">Strongly Disagree</button>
+                                    <button class="option-button">Disagree</button>
+                                    <button class="option-button selected">Neutral ✓</button>
+                                    <button class="option-button">Agree</button>
+                                    <button class="option-button">Strongly Agree</button>
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">Skip This Section</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✓ Advantages</h4>
+                    <ul>
+                        <li>Educational</li>
+                        <li>Can skip tedious Q's</li>
+                        <li>Section badges motivate</li>
+                        <li>Context provided</li>
+                        <li>Save/resume option</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>✗ Drawbacks</h4>
+                    <ul>
+                        <li>Complex branching logic</li>
+                        <li>More UI elements</li>
+                        <li>Skip logic adds risk</li>
+                        <li>Backend complexity</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OPTION 6: FORCED CHOICE -->
+        <div id="option6" class="option-container">
+            <div class="option-title">⚖️ Option 6: Comparison-Based Forced Choice (A/B)</div>
+            <div class="description">
+                <strong>Experience:</strong> Choose between two statements. No neutral option. Faster completion. High-quality data.
+            </div>
+
+            <div class="devices">
+                <!-- Mobile -->
+                <div class="device">
+                    <div class="device-label">📱 Mobile (375px)</div>
+                    <div class="phone-frame">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            <div class="comparison-container">
+                                <div class="header" style="text-align: center;">
+                                    <div style="font-size: 12px; color: #7f8c8d;">18 / 55 Comparisons</div>
+                                </div>
+
+                                <div class="choice-prompt">
+                                    Which statement feels MORE true?
+                                </div>
+
+                                <div class="ab-comparison">
+                                    <div class="choice-card">
+                                        I feel secure in my relationships.
+                                    </div>
+                                    <div class="vs-label">VS</div>
+                                    <div class="choice-card selected">
+                                        I worry about abandonment.
+                                    </div>
+                                </div>
+
+                                <div style="text-align: center; font-size: 12px; color: #3498db; margin-top: 20px; font-weight: 600;">
+                                    ✓ You selected the right option
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Undo</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop -->
+                <div class="device">
+                    <div class="device-label">🖥️ Desktop (1280px)</div>
+                    <div class="desktop-frame">
+                        <div class="screen-content">
+                            <div style="max-width: 700px; width: 100%;">
+                                <div class="header">
+                                    <div class="header-title">Which feels more true to YOU?</div>
+                                    <div style="font-size: 12px; color: #7f8c8d; margin-top: 10px;">18 of 55 Comparisons</div>
+                                </div>
+
+                                <div style="display: flex; gap: 40px; align-items: stretch; margin: 50px 0;">
+                                    <div class="choice-card" style="flex: 1;">
+                                        I feel secure in my relationships.
+                                    </div>
+                                    <div style="font-weight: 700; font-size: 20px; color: #e74c3c; display: flex; align-items: center;">⚔️</div>
+                                    <div class="choice-card selected" style="flex: 1;">
+                                        I worry about abandonment.
+                                    </div>
+                                </div>
+
+                                <div style="text-align: center; font-size: 14px; color: #3498db; margin: 30px 0; font-weight: 600;">
+                                    ✓ Selected (Press again to undo)
+                                </div>
+
+                                <div class="buttons">
+                                    <button class="btn btn-secondary">← Back</button>
+                                    <button class="btn btn-primary">Next →</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="pros">
+                    <h4>✓ Advantages</h4>
+                    <ul>
+                        <li>Faster completion</li>
+                        <li>Decisive responses</li>
+                        <li>High data quality</li>
+                        <li>Large targets</li>
+                        <li>Familiar format</li>
+                    </ul>
+                </div>
+                <div class="cons">
+                    <h4>✗ Drawbacks</h4>
+                    <ul>
+                        <li>Different algorithm</li>
+                        <li>No neutral option</li>
+                        <li>Many comparisons</li>
+                        <li>User pressure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showOption(optionId) {
+            // Hide all options
+            document.querySelectorAll('.option-container').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Hide all buttons as active
+            document.querySelectorAll('.nav-tabs button').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Show selected option
+            document.getElementById(optionId).classList.add('active');
+
+            // Highlight selected button
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>

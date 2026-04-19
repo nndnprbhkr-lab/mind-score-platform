@@ -280,6 +280,12 @@ class TestNotifier extends StateNotifier<TestState> {
     state = state.copyWith(selectedIndex: optionIndex);
   }
 
+  /// Clears the current selection — used by the ephemeral undo action to
+  /// cancel an auto-advance before the timer fires.
+  void clearSelection() {
+    state = state.copyWith(clearSelectedIndex: true);
+  }
+
   /// Appends the current answer to [answeredSoFar], then fetches the next
   /// question.  If the server signals [IsComplete], auto-submits the test.
   Future<void> nextQuestion() async {

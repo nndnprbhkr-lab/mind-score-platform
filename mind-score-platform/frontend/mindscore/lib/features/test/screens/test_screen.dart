@@ -4,6 +4,13 @@
 // the server.  The client accumulates answered history and sends it with each
 // POST /api/questions/next call via [TestNotifier.nextQuestion].
 //
+// Interaction model — auto-advance with ephemeral undo:
+//   1. User taps an answer → selection highlights immediately.
+//   2. An 800 ms timer starts; a snackbar shows "Answer recorded [Undo]".
+//   3. If the user taps Undo within 800 ms → timer cancelled, selection cleared.
+//   4. If the timer fires → snackbar dismissed, nextQuestion() called.
+//   This removes the explicit "Next" button entirely, halving the required taps.
+//
 // Supported question formats:
 //   Likert   — 5-point agree/disagree scale (standard).
 //   Scenario — Situational Judgment Test: story card with 4–5 concrete options.
@@ -15,9 +22,9 @@
 //   _LikertCard          — question text + 5 Likert option tiles.
 //   _ScenarioCard        — scenario text + variable option tiles.
 //   _OptionTile          — shared selectable tile used by both card types.
-//   _BottomBar           — auto-save indicator + Next button.
-//   _NextButton          — advances to the next question (disabled if unanswered).
+//   _AutoSaveLabel       — replaces old BottomBar; no Next button.
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,12 +46,9 @@ const _kLikertOptions = [
 
 // ─── TestScreen ───────────────────────────────────────────────────────────────
 
-/// The main widget for the active adaptive assessment experience.
 class TestScreen extends ConsumerStatefulWidget {
   final String testId;
   final String testName;
-
-  /// The context the user selected on the previous screen.
   final AssessmentContext context;
 
   const TestScreen({
@@ -59,6 +63,8 @@ class TestScreen extends ConsumerStatefulWidget {
 }
 
 class _TestScreenState extends ConsumerState<TestScreen> {
+  Timer? _advanceTimer;
+
   @override
   void initState() {
     super.initState();
@@ -67,9 +73,69 @@ class _TestScreenState extends ConsumerState<TestScreen> {
         .startAdaptive(widget.testId, widget.context, testName: widget.testName));
   }
 
+  @override
+  void dispose() {
+    _advanceTimer?.cancel();
+    super.dispose();
+  }
+
+  // ── Auto-advance logic ─────────────────────────────────────────────────────
+
+  void _onAnswerSelected(int index) {
+    // Ignore taps while a network request is in-flight.
+    if (ref.read(testProvider).isLoading) return;
+
+    ref.read(testProvider.notifier).selectAnswer(index);
+
+    // Changing answer mid-window resets the timer and snackbar.
+    _advanceTimer?.cancel();
+    _showUndoSnackbar();
+
+    _advanceTimer = Timer(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ref.read(testProvider.notifier).nextQuestion();
+    });
+  }
+
+  void _showUndoSnackbar() {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline_rounded,
+              size: 15,
+              color: AppColors.accentLight,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Answer recorded',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AppColors.highlight,
+          onPressed: () {
+            _advanceTimer?.cancel();
+            ref.read(testProvider.notifier).clearSelection();
+          },
+        ),
+        // Duration exceeds the 800 ms advance delay so it's always visible
+        // during the undo window; we dismiss it programmatically on advance.
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   // ── Navigation ─────────────────────────────────────────────────────────────
 
-  /// Navigates to the correct results screen once a result is available.
   void _navigateToResults(String? typeCode, String? testName) {
     if (!mounted) return;
     final route = switch (typeCode) {
@@ -83,6 +149,9 @@ class _TestScreenState extends ConsumerState<TestScreen> {
   // ── Quit dialog ────────────────────────────────────────────────────────────
 
   Future<void> _confirmQuit() async {
+    _advanceTimer?.cancel();
+    ScaffoldMessenger.of(context).clearSnackBars();
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -112,7 +181,6 @@ class _TestScreenState extends ConsumerState<TestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Navigate to results as soon as a result arrives.
     ref.listen<TestState>(testProvider, (prev, next) {
       if (next.result != null && prev?.result == null) {
         _navigateToResults(next.result!.typeCode, next.result!.testName);
@@ -121,7 +189,6 @@ class _TestScreenState extends ConsumerState<TestScreen> {
 
     final test = ref.watch(testProvider);
 
-    // ── Submission loading ─────────────────────────────────────────────────
     if (test.isSubmitted && test.result == null) {
       return const Scaffold(
         backgroundColor: AppColors.backgroundDark,
@@ -141,17 +208,13 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       );
     }
 
-    // ── Initial loading ────────────────────────────────────────────────────
     if (test.isLoading && test.currentQuestion == null) {
       return const Scaffold(
         backgroundColor: AppColors.backgroundDark,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.accent),
-        ),
+        body: Center(child: CircularProgressIndicator(color: AppColors.accent)),
       );
     }
 
-    // ── Error ──────────────────────────────────────────────────────────────
     if (test.error != null && test.currentQuestion == null) {
       return Scaffold(
         backgroundColor: AppColors.backgroundDark,
@@ -183,7 +246,6 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       );
     }
 
-    // ── No question (shouldn't normally reach here) ─────────────────────────
     if (test.currentQuestion == null) {
       return Scaffold(
         backgroundColor: AppColors.backgroundDark,
@@ -192,8 +254,7 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       );
     }
 
-    final q          = test.currentQuestion!;
-    final canProceed = test.selectedIndex != null;
+    final q = test.currentQuestion!;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
@@ -201,16 +262,15 @@ class _TestScreenState extends ConsumerState<TestScreen> {
         child: Column(
           children: [
             _Header(
-              testName:         test.testName.isEmpty ? widget.testName : test.testName,
-              answeredCount:    test.answeredCount,
+              testName: test.testName.isEmpty ? widget.testName : test.testName,
+              answeredCount: test.answeredCount,
               estimatedRemaining: test.estimatedRemaining,
               remainingSeconds: test.remainingSeconds,
-              onBack:           _confirmQuit,
+              onBack: _confirmQuit,
             ),
 
             _GradientProgressBar(progress: test.progress),
 
-            // Question content — animates on each new question.
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -229,32 +289,24 @@ class _TestScreenState extends ConsumerState<TestScreen> {
                     ),
                     child: q.questionType == QuestionType.scenario
                         ? _ScenarioCard(
-                            key:           ValueKey(q.id),
-                            questionText:  q.text,
+                            key: ValueKey(q.id),
+                            questionText: q.text,
                             options: q.scenarioOptions ?? const [],
                             selectedIndex: test.selectedIndex,
-                            onSelect: (i) =>
-                                ref.read(testProvider.notifier).selectAnswer(i),
+                            onSelect: _onAnswerSelected,
                           )
                         : _LikertCard(
-                            key:           ValueKey(q.id),
-                            questionText:  q.text,
+                            key: ValueKey(q.id),
+                            questionText: q.text,
                             selectedIndex: test.selectedIndex,
-                            onSelect: (i) =>
-                                ref.read(testProvider.notifier).selectAnswer(i),
+                            onSelect: _onAnswerSelected,
                           ),
                   ),
                 ),
               ),
             ),
 
-            _BottomBar(
-              canProceed:   canProceed,
-              isLoading:    test.isLoading,
-              onNext: canProceed
-                  ? () => ref.read(testProvider.notifier).nextQuestion()
-                  : null,
-            ),
+            const _AutoSaveLabel(),
           ],
         ),
       ),
@@ -280,7 +332,7 @@ class _Header extends StatelessWidget {
   });
 
   String _fmt(int s) {
-    final m   = s ~/ 60;
+    final m = s ~/ 60;
     final sec = s % 60;
     return '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
   }
@@ -300,7 +352,6 @@ class _Header extends StatelessWidget {
             color: AppColors.textPrimary,
             tooltip: 'Quit test',
           ),
-
           Expanded(
             child: Column(
               children: [
@@ -324,8 +375,6 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
-
-          // Countdown timer badge
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -426,7 +475,6 @@ class _GradientProgressBar extends StatelessWidget {
 
 // ─── _LikertCard ─────────────────────────────────────────────────────────────
 
-/// Renders a standard 5-point Likert-scale question.
 class _LikertCard extends StatelessWidget {
   final String questionText;
   final int? selectedIndex;
@@ -467,10 +515,10 @@ class _LikertCard extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _OptionTile(
-                text:       _kLikertOptions[i],
+                text: _kLikertOptions[i],
                 isSelected: selectedIndex == i,
-                onTap:      () => onSelect(i),
-                accent:     AppColors.accent,
+                onTap: () => onSelect(i),
+                accent: AppColors.accent,
               )
                   .animate(delay: (i * 40).ms)
                   .fadeIn(duration: 280.ms)
@@ -486,14 +534,8 @@ class _LikertCard extends StatelessWidget {
 
 // ─── _ScenarioCard ────────────────────────────────────────────────────────────
 
-/// Renders a Situational Judgment Test scenario question.
-///
-/// The scenario text is displayed as a story card with a coloured left border,
-/// followed by the selectable option tiles.
 class _ScenarioCard extends StatelessWidget {
   final String questionText;
-
-  /// Each entry is `{'text': String, 'traitMappings': Map<String, dynamic>}`.
   final List<Map<String, dynamic>> options;
   final int? selectedIndex;
   final ValueChanged<int> onSelect;
@@ -514,7 +556,6 @@ class _ScenarioCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Scenario story card
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -569,16 +610,15 @@ class _ScenarioCard extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          // Option tiles
           ...List.generate(options.length, (i) {
             final optionText = options[i]['text'] as String? ?? '';
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _OptionTile(
-                text:       optionText,
+                text: optionText,
                 isSelected: selectedIndex == i,
-                onTap:      () => onSelect(i),
-                accent:     AppColors.highlight,
+                onTap: () => onSelect(i),
+                accent: AppColors.highlight,
               )
                   .animate(delay: (i * 50).ms)
                   .fadeIn(duration: 280.ms)
@@ -595,10 +635,6 @@ class _ScenarioCard extends StatelessWidget {
 
 // ─── _OptionTile ──────────────────────────────────────────────────────────────
 
-/// Shared selectable answer tile used by both [_LikertCard] and [_ScenarioCard].
-///
-/// [accent] controls the selection highlight colour so each card type can
-/// carry its own visual identity.
 class _OptionTile extends StatelessWidget {
   final String text;
   final bool isSelected;
@@ -631,20 +667,19 @@ class _OptionTile extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          splashColor:    accent.withOpacity(0.12),
+          splashColor: accent.withOpacity(0.12),
           highlightColor: accent.withOpacity(0.06),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
-                // Radio circle
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width:  22,
+                  width: 22,
                   height: 22,
                   decoration: BoxDecoration(
-                    shape:  BoxShape.circle,
-                    color:  isSelected ? accent : Colors.transparent,
+                    shape: BoxShape.circle,
+                    color: isSelected ? accent : Colors.transparent,
                     border: Border.all(
                       color: isSelected ? accent : AppColors.cardBorder,
                       width: 2,
@@ -652,8 +687,7 @@ class _OptionTile extends StatelessWidget {
                   ),
                   child: isSelected
                       ? const Center(
-                          child: Icon(Icons.circle,
-                              size: 10, color: Colors.white),
+                          child: Icon(Icons.circle, size: 10, color: Colors.white),
                         )
                       : null,
                 ),
@@ -663,8 +697,9 @@ class _OptionTile extends StatelessWidget {
                     text,
                     style: TextStyle(
                       fontSize: 14,
-                      color:      isSelected ? Colors.white : AppColors.optionText,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected ? Colors.white : AppColors.optionText,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
                       height: 1.4,
                     ),
                   ),
@@ -678,18 +713,12 @@ class _OptionTile extends StatelessWidget {
   }
 }
 
-// ─── _BottomBar ───────────────────────────────────────────────────────────────
+// ─── _AutoSaveLabel ───────────────────────────────────────────────────────────
 
-class _BottomBar extends StatelessWidget {
-  final bool canProceed;
-  final bool isLoading;
-  final VoidCallback? onNext;
-
-  const _BottomBar({
-    required this.canProceed,
-    required this.isLoading,
-    required this.onNext,
-  });
+/// Minimal bottom chrome — reassures the user progress is saved without
+/// occupying space with a redundant Next button.
+class _AutoSaveLabel extends StatelessWidget {
+  const _AutoSaveLabel();
 
   @override
   Widget build(BuildContext context) {
@@ -697,91 +726,25 @@ class _BottomBar extends StatelessWidget {
       decoration: const BoxDecoration(
         border: Border(top: BorderSide(color: AppColors.cardBorder)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Pulsing auto-save label
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.cloud_done_outlined,
-                  size: 14, color: AppColors.textMuted),
-              const SizedBox(width: 6),
-              Text(
-                'Progress saved automatically',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
-              ),
-            ],
-          )
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .fadeIn(duration: 800.ms)
-              .then()
-              .fadeOut(duration: 800.ms, delay: 2400.ms),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            width: double.infinity,
-            child: _NextButton(
-              enabled:   canProceed,
-              isLoading: isLoading,
-              onTap:     onNext,
-            ),
+          const Icon(Icons.cloud_done_outlined,
+              size: 14, color: AppColors.textMuted),
+          const SizedBox(width: 6),
+          Text(
+            'Progress saved automatically',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.textMuted,
+                ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── _NextButton ──────────────────────────────────────────────────────────────
-
-class _NextButton extends StatelessWidget {
-  final bool enabled;
-  final bool isLoading;
-  final VoidCallback? onTap;
-
-  const _NextButton({
-    required this.enabled,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: (enabled && !isLoading) ? onTap : null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor:         AppColors.accent,
-        foregroundColor:         Colors.white,
-        disabledBackgroundColor: AppColors.cardBorder,
-        disabledForegroundColor: AppColors.textMuted,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14)),
-        elevation: 0,
-      ),
-      child: isLoading
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                  color: Colors.white, strokeWidth: 2),
-            )
-          : const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Next Question',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward_rounded, size: 18),
-              ],
-            ),
+      )
+          .animate(onPlay: (c) => c.repeat(reverse: true))
+          .fadeIn(duration: 800.ms)
+          .then()
+          .fadeOut(duration: 800.ms, delay: 2400.ms),
     );
   }
 }
