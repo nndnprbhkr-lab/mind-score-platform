@@ -14,6 +14,7 @@ import '../features/test/screens/context_selection_screen.dart';
 import '../features/test/screens/test_screen.dart';
 import '../features/results/screens/results_screen.dart';
 import '../features/results/screens/mind_score_results_screen.dart';
+import '../features/results/screens/career_fit_results_screen.dart';
 import '../features/admin/screens/admin_screen.dart';
 import '../widgets/nav/app_shell.dart';
 
@@ -78,6 +79,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.mindScoreResults,
         pageBuilder: (ctx, state) =>
             _fadePage(const MindScoreResultsScreen(), state),
+      ),
+      GoRoute(
+        path: AppRoutes.careerFitResults,
+        pageBuilder: (ctx, state) =>
+            _fadePage(const CareerFitResultsScreen(), state),
       ),
 
       // Admin — no shell

@@ -10,6 +10,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../features/results/providers/results_provider.dart';
 import '../../../features/results/screens/mind_score_results_screen.dart';
+import '../../../features/results/screens/career_fit_results_screen.dart';
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
 const _kPurple = Color(0xFF6B35C8);
@@ -205,6 +206,12 @@ class _MobileLayout extends StatelessWidget {
       ));
       return;
     }
+    if (r.testName == 'Career Fit Assessment') {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => CareerFitResultsScreen(resultModel: r),
+      ));
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -322,6 +329,12 @@ class _WideLayout extends StatelessWidget {
     if (r.typeCode == 'MIND_SCORE') {
       Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => MindScoreResultsScreen(resultModel: r),
+      ));
+      return;
+    }
+    if (r.testName == 'Career Fit Assessment') {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => CareerFitResultsScreen(resultModel: r),
       ));
       return;
     }

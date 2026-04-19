@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MindScorePlatform.Application.DTOs;
 using MindScorePlatform.Application.Interfaces;
+using MindScorePlatform.Domain.Enums;
 using MindScorePlatform.Infrastructure.Services.Mpi;
 
 namespace MindScorePlatform.Infrastructure.Services;
@@ -41,6 +42,8 @@ public sealed class AiFollowUpService : IAiFollowUpService
     /// <inheritdoc/>
     public async Task<AiFollowUpPayload?> GenerateAsync(
         Dictionary<string, MpiDimensionScore> dimensions,
+        AssessmentContext context,
+        string? ageBandName,
         CancellationToken ct)
     {
         var (tensions, _) = TensionDetector.Detect(dimensions);
@@ -60,7 +63,7 @@ public sealed class AiFollowUpService : IAiFollowUpService
                 system     = "You are a psychometric assessment assistant. Output ONLY valid JSON — no prose, no markdown code fences.",
                 messages   = new[]
                 {
-                    new { role = "user", content = BuildPrompt(dimensions, tensions) }
+                    new { role = "user", content = BuildPrompt(dimensions, tensions, context, ageBandName) }
                 },
             };
 
@@ -80,7 +83,39 @@ public sealed class AiFollowUpService : IAiFollowUpService
             var root = JsonSerializer.Deserialize<JsonElement>(json);
             var text = root.GetProperty("content")[0].GetProperty("text").GetString() ?? "";
 
-            return JsonSerializer.Deserialize<AiFollowUpPayload>(text, CamelCase);
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                _logger.LogWarning("Claude returned an empty text payload — discarding follow-up.");
+                return null;
+            }
+
+            // Strip markdown code fences Claude occasionally includes despite instructions.
+            var cleaned = text.Trim();
+            if (cleaned.StartsWith("```"))
+            {
+                var firstNewline = cleaned.IndexOf('\n');
+                cleaned = firstNewline >= 0 ? cleaned[(firstNewline + 1)..] : cleaned;
+                if (cleaned.EndsWith("```"))
+                    cleaned = cleaned[..^3].TrimEnd();
+            }
+
+            var payload = JsonSerializer.Deserialize<AiFollowUpPayload>(cleaned, CamelCase);
+
+            if (payload is null || payload.Questions.Count == 0)
+            {
+                _logger.LogWarning(
+                    "Claude returned a parseable response but with no questions. Raw: {Text}", text);
+                return null;
+            }
+
+            if (payload.Questions.Any(q => q.Options.Count < 2))
+            {
+                _logger.LogWarning(
+                    "Claude returned a question with fewer than 2 options — discarding follow-up. Raw: {Text}", text);
+                return null;
+            }
+
+            return payload;
         }
         catch (Exception ex)
         {
@@ -92,22 +127,55 @@ public sealed class AiFollowUpService : IAiFollowUpService
 
     private static string BuildPrompt(
         Dictionary<string, MpiDimensionScore> dimensions,
-        List<string> tensions)
+        List<string> tensions,
+        AssessmentContext context,
+        string? ageBandName)
     {
+        var contextLabel = context switch
+        {
+            AssessmentContext.Career              => "career and workplace decisions",
+            AssessmentContext.Relationships       => "personal relationships and social dynamics",
+            AssessmentContext.Leadership          => "leadership and team management",
+            AssessmentContext.PersonalDevelopment => "personal growth and self-awareness",
+            _                                    => "general self-understanding",
+        };
+
+        var contextGuidance = context switch
+        {
+            AssessmentContext.Career =>
+                "Frame scenarios around workplace situations: team meetings, project decisions, dealing with colleagues, career choices.",
+            AssessmentContext.Relationships =>
+                "Frame scenarios around interpersonal situations: conflict with a partner or friend, social gatherings, emotional conversations.",
+            AssessmentContext.Leadership =>
+                "Frame scenarios around leading others: giving feedback, handling underperformance, running meetings, making team decisions.",
+            AssessmentContext.PersonalDevelopment =>
+                "Frame scenarios around self-reflection and growth: handling setbacks, personal goals, values conflicts, inner motivation.",
+            _ =>
+                "Frame scenarios around everyday life situations that reveal natural personality tendencies.",
+        };
+
+        var ageBandLine = ageBandName is not null
+            ? "User age range: " + ageBandName + ". Ensure all scenarios are realistic and relatable for someone at this life stage.\n"
+            : "";
+
         var scores = string.Join("\n", dimensions.Select(d =>
             $"- {d.Key}: {d.Value.Percentage:F1}% ({d.Value.DominantPole} pole, {d.Value.Strength} preference)"));
 
         var tensionList = string.Join("\n", tensions.Select(t => $"- {t}"));
 
         return
-            "A user completed a 4-dimension personality assessment with these scores:\n"
+            "A user completed a 4-dimension personality assessment focused on " + contextLabel + ".\n"
+            + ageBandLine
+            + "Their dimension scores are:\n"
             + scores + "\n\n"
             + "Detected ambiguities that need resolution:\n"
             + tensionList + "\n\n"
-            + "Generate exactly 3 scenario-based follow-up questions to resolve the ambiguities above.\n"
+            + "Generate exactly " + tensions.Count + " scenario-based follow-up question(s) — one per ambiguity listed above.\n"
+            + contextGuidance + "\n"
             + "Each question must have exactly 2 options mapping to opposite poles of the ambiguous dimension.\n"
             + "Questions should feel natural and behavioural — not abstract or clinical.\n\n"
-            + "Reply ONLY with this JSON structure (no other text):\n"
+            + "Reply ONLY with this JSON structure (no other text).\n"
+            + "The questions array must contain exactly " + tensions.Count + " item(s), one per ambiguity, with ids fu_1…fu_" + tensions.Count + ":\n"
             + "{\n"
             + "  \"tensions\": [\"copy each ambiguity listed above as a string\"],\n"
             + "  \"questions\": [\n"

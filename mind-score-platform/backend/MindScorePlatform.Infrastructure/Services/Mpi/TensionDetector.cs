@@ -18,6 +18,22 @@ namespace MindScorePlatform.Infrastructure.Services.Mpi;
 /// </remarks>
 internal static class TensionDetector
 {
+    /// <summary>
+    /// Classifies the strength of a dimension score as Slight, Moderate, Clear, or Strong
+    /// based on its deviation from the neutral centre (50).
+    /// </summary>
+    internal static string ClassifyStrength(double pct)
+    {
+        var dev = Math.Abs(pct - 50);
+        return dev switch
+        {
+            <= 10 => "Slight",
+            <= 20 => "Moderate",
+            <= 35 => "Clear",
+            _     => "Strong",
+        };
+    }
+
     internal static (List<string> Tensions, Dictionary<string, int> Confidence) Detect(
         Dictionary<string, MpiDimensionScore> dimensions)
     {

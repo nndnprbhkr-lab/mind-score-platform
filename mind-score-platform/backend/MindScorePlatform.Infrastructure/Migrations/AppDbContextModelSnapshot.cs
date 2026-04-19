@@ -835,6 +835,204 @@ namespace MindScorePlatform.Infrastructure.Migrations
                             ScenarioOptionsJson = "[{\"text\":\"Write a detailed weekly plan with specific times, metrics, and milestones, then commit publicly to maintain accountability through clear structure.\",\"traitMappings\":{\"LifeApproach\":5,\"DecisionStyle\":4}},{\"text\":\"Start loosely, see what feels right in practice, and adapt the approach as you go without committing to a rigid plan.\",\"traitMappings\":{\"LifeApproach\":1,\"PerceptionMode\":2}},{\"text\":\"Research behaviour-change science, identify the mechanisms most likely to work for someone like you, and design a system based on evidence.\",\"traitMappings\":{\"PerceptionMode\":5,\"DecisionStyle\":5}},{\"text\":\"Involve close friends or a group — shared energy, public commitment, and social reinforcement are what actually make things stick for you.\",\"traitMappings\":{\"EnergySource\":5,\"DecisionStyle\":2}}]",
                             TestId = new Guid("00000000-0000-0000-0000-000000000001"),
                             Text = "You have decided to make a significant lifestyle change — a new sleep schedule, exercise routine, and reading practice — starting next month. You have three weeks to prepare. You know from experience that some change strategies work better for you than others. How do you set yourself up?"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000001"),
+                            Code = "CF_01",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 1,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Building something concrete \\u2014 a product, system, or solution that works.\",\"clusterImpact\":{\"BUILDER\":5,\"OPERATOR\":2}},{\"text\":\"Digging into data and uncovering insights that inform strategy.\",\"clusterImpact\":{\"ANALYST\":5,\"OPERATOR\":2}},{\"text\":\"Leading people toward a shared goal and watching them grow.\",\"clusterImpact\":{\"LEADER\":5,\"COMMUNICATOR\":2}},{\"text\":\"Creating something original that changes how people feel or think.\",\"clusterImpact\":{\"CREATOR\":5,\"ENTREPRENEUR\":2}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "Your ideal work setup energises you most when you are..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000002"),
+                            Code = "CF_02",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 2,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Dive in, experiment, and iterate fast.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"BUILDER\":3}},{\"text\":\"Research thoroughly before committing to a direction.\",\"clusterImpact\":{\"ANALYST\":5,\"OPERATOR\":3}},{\"text\":\"Rally the team and divide responsibilities across people.\",\"clusterImpact\":{\"LEADER\":5,\"COMMUNICATOR\":3}},{\"text\":\"Consider carefully how it will affect the people involved.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":2}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When a brand-new challenge lands on your desk, your first instinct is to..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000003"),
+                            Code = "CF_03",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 3,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Shipping a product or system that millions of people rely on every day.\",\"clusterImpact\":{\"BUILDER\":5,\"OPERATOR\":2}},{\"text\":\"Discovering an insight that completely changed a strategy or market.\",\"clusterImpact\":{\"ANALYST\":5,\"ENTREPRENEUR\":3}},{\"text\":\"Watching someone you mentored become a leader in their own right.\",\"clusterImpact\":{\"CAREGIVER\":5,\"LEADER\":4}},{\"text\":\"Creating a piece of work that shifted culture or moved public opinion.\",\"clusterImpact\":{\"CREATOR\":5,\"COMMUNICATOR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "The achievement that would make you most proud is..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000004"),
+                            Code = "CF_04",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 4,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Built, shipped, or fixed something real and tangible.\",\"clusterImpact\":{\"BUILDER\":5,\"OPERATOR\":2}},{\"text\":\"Solved a complex puzzle or learned something genuinely unexpected.\",\"clusterImpact\":{\"ANALYST\":5,\"CREATOR\":2}},{\"text\":\"Helped someone navigate a genuinely difficult situation.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":3}},{\"text\":\"Inspired a room, closed a deal, or led a high-stakes conversation.\",\"clusterImpact\":{\"COMMUNICATOR\":5,\"LEADER\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "At the end of a great workday, you feel best when you have..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000005"),
+                            Code = "CF_05",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 5,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Engineer a technical workaround or a creative patch.\",\"clusterImpact\":{\"BUILDER\":5,\"ANALYST\":3}},{\"text\":\"Step up, make a call, and rally everyone forward.\",\"clusterImpact\":{\"LEADER\":5,\"ENTREPRENEUR\":4}},{\"text\":\"Uncover the human issue that is really blocking progress.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":3}},{\"text\":\"Throw out the old plan and reimagine the approach entirely.\",\"clusterImpact\":{\"CREATOR\":5,\"ENTREPRENEUR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When your team hits a serious roadblock, you tend to..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000006"),
+                            Code = "CF_06",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 6,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Trust the data \\u2014 you build models and pressure-test options first.\",\"clusterImpact\":{\"ANALYST\":5,\"OPERATOR\":3}},{\"text\":\"Trust your gut and move before the picture is fully clear.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"CREATOR\":3}},{\"text\":\"Build consensus \\u2014 a decision everyone owns beats a perfect top-down call.\",\"clusterImpact\":{\"LEADER\":5,\"CAREGIVER\":3}},{\"text\":\"Filter through values \\u2014 what is right, not just what is optimal.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":2}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When it comes to making important decisions, you typically..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000007"),
+                            Code = "CF_07",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 7,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Designing and building a complex technical system from scratch.\",\"clusterImpact\":{\"BUILDER\":5,\"ANALYST\":3}},{\"text\":\"Launching a brand-new business or product from zero to market.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"CREATOR\":3}},{\"text\":\"Coaching a high-potential team to peak performance.\",\"clusterImpact\":{\"LEADER\":5,\"CAREGIVER\":4}},{\"text\":\"Creating a product experience that genuinely delights people.\",\"clusterImpact\":{\"CREATOR\":5,\"BUILDER\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "If you could pick your next project, your dream would be..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000008"),
+                            Code = "CF_08",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 8,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Follow structured plans and resist unscheduled interruptions.\",\"clusterImpact\":{\"OPERATOR\":5,\"ANALYST\":3}},{\"text\":\"Stay fluid and re-prioritise constantly based on what matters most right now.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"LEADER\":3}},{\"text\":\"Block long stretches for deep, uninterrupted thinking.\",\"clusterImpact\":{\"ANALYST\":5,\"BUILDER\":4}},{\"text\":\"Leave room for spontaneous collaboration and idea exchange.\",\"clusterImpact\":{\"COMMUNICATOR\":5,\"CREATOR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When managing your time and workflow, you..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000009"),
+                            Code = "CF_09",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 9,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Diagnose the root cause systematically before touching anything.\",\"clusterImpact\":{\"ANALYST\":5,\"BUILDER\":3}},{\"text\":\"Build a fix fast and put safeguards in place to prevent recurrence.\",\"clusterImpact\":{\"BUILDER\":5,\"OPERATOR\":4}},{\"text\":\"Coordinate the response \\u2014 communicate, assign roles, manage stakeholders.\",\"clusterImpact\":{\"LEADER\":5,\"COMMUNICATOR\":3}},{\"text\":\"Focus first on the people impacted and how to make things right for them.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When something fails or breaks badly at work, you..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000010"),
+                            Code = "CF_10",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 10,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Infrastructure or systems that scale and outlast their creator.\",\"clusterImpact\":{\"BUILDER\":5,\"OPERATOR\":3}},{\"text\":\"Revenue growth, market leadership, or a thriving business.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"ANALYST\":2}},{\"text\":\"Improving someone\\u0027s health, confidence, or life trajectory.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":3}},{\"text\":\"Shifting how people think, feel, or experience the world around them.\",\"clusterImpact\":{\"CREATOR\":5,\"COMMUNICATOR\":4}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "The type of impact you care most about creating is..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000011"),
+                            Code = "CF_11",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 11,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Study documentation, research, and theory before taking action.\",\"clusterImpact\":{\"ANALYST\":5,\"OPERATOR\":3}},{\"text\":\"Jump in and learn entirely by doing \\u2014 mistakes included.\",\"clusterImpact\":{\"BUILDER\":5,\"ENTREPRENEUR\":4}},{\"text\":\"Watch an expert do it, then teach it to someone else to lock it in.\",\"clusterImpact\":{\"COMMUNICATOR\":5,\"LEADER\":3}},{\"text\":\"Learn alongside a mentor who gives real-time personalised feedback.\",\"clusterImpact\":{\"CAREGIVER\":3,\"LEADER\":3,\"COMMUNICATOR\":4}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When learning something completely new, you prefer to..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000012"),
+                            Code = "CF_12",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 12,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Map out a clear plan with milestones, owners, and dependencies.\",\"clusterImpact\":{\"OPERATOR\":5,\"LEADER\":3}},{\"text\":\"Find the fastest path to delivering real value, even imperfectly.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"BUILDER\":3}},{\"text\":\"Explore creative angles others have not considered yet.\",\"clusterImpact\":{\"CREATOR\":5,\"ENTREPRENEUR\":3}},{\"text\":\"Identify who you need and build a support network around the goal.\",\"clusterImpact\":{\"LEADER\":5,\"CAREGIVER\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "When handed a significant new responsibility, your first move is to..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000013"),
+                            Code = "CF_13",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 13,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Excited \\u2014 where there is risk, there is opportunity worth seizing.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"CREATOR\":3}},{\"text\":\"Focused \\u2014 you model the downside and reduce it systematically.\",\"clusterImpact\":{\"ANALYST\":5,\"OPERATOR\":4}},{\"text\":\"Responsible \\u2014 your priority is protecting the people involved.\",\"clusterImpact\":{\"CAREGIVER\":5,\"LEADER\":2}},{\"text\":\"Curious \\u2014 you see it as a creative problem waiting to be reframed.\",\"clusterImpact\":{\"CREATOR\":5,\"ENTREPRENEUR\":2}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "Risk and uncertainty at work make you feel..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000014"),
+                            Code = "CF_14",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 14,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Pair up with them to debug or solve the technical challenge together.\",\"clusterImpact\":{\"BUILDER\":5,\"ANALYST\":3}},{\"text\":\"Sit with them, listen deeply, and offer genuine emotional support.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":3}},{\"text\":\"Connect them to someone better positioned to help solve the problem.\",\"clusterImpact\":{\"COMMUNICATOR\":5,\"LEADER\":3}},{\"text\":\"Step in, take ownership of the situation, and drive it to resolution.\",\"clusterImpact\":{\"LEADER\":5,\"ENTREPRENEUR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "A colleague is visibly struggling with a tough assignment. You..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000015"),
+                            Code = "CF_15",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 15,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"New product roadmap, engineering milestones, and technical innovations.\",\"clusterImpact\":{\"BUILDER\":5,\"ANALYST\":3}},{\"text\":\"Bold business growth targets and how the company plans to win the market.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"ANALYST\":2}},{\"text\":\"Stories about employees or customers whose lives have been genuinely changed.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":4}},{\"text\":\"Daring creative campaigns or brand moves that nobody saw coming.\",\"clusterImpact\":{\"CREATOR\":5,\"COMMUNICATOR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "At a company all-hands, you get most excited when you hear about..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000016"),
+                            Code = "CF_16",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 16,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Deep solo focus \\u2014 no meetings, no interruptions, just you and the problem.\",\"clusterImpact\":{\"ANALYST\":5,\"BUILDER\":4}},{\"text\":\"Fast-paced cross-functional sprints where you juggle multiple moving parts.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"COMMUNICATOR\":3}},{\"text\":\"Clear structures, accountable teams, and well-defined repeatable processes.\",\"clusterImpact\":{\"OPERATOR\":5,\"LEADER\":3}},{\"text\":\"Open, diverse collaboration where great ideas can come from anywhere.\",\"clusterImpact\":{\"CREATOR\":5,\"COMMUNICATOR\":4}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "The work setup where you consistently do your absolute best is..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000017"),
+                            Code = "CF_17",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 17,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"Having built products, tools, or infrastructure that millions depend on.\",\"clusterImpact\":{\"BUILDER\":5,\"ENTREPRENEUR\":2}},{\"text\":\"Running your own company, fund, or investment portfolio.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"LEADER\":3}},{\"text\":\"Leading a large organisation or a mission-driven institution.\",\"clusterImpact\":{\"LEADER\":5,\"OPERATOR\":3}},{\"text\":\"Being recognised as the world\\u0027s leading expert in your field.\",\"clusterImpact\":{\"ANALYST\":5,\"COMMUNICATOR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "Looking further ahead, you would feel most fulfilled if your career led to..."
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0003-000000000018"),
+                            Code = "CF_18",
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Order = 18,
+                            QuestionType = 1,
+                            ScenarioOptionsJson = "[{\"text\":\"What you built, shipped, or delivered that still runs reliably today.\",\"clusterImpact\":{\"BUILDER\":5,\"OPERATOR\":4}},{\"text\":\"The growth in revenue, users, or market share you personally drove.\",\"clusterImpact\":{\"ENTREPRENEUR\":5,\"ANALYST\":2}},{\"text\":\"The lives you changed or the problems you permanently solved for people.\",\"clusterImpact\":{\"CAREGIVER\":5,\"COMMUNICATOR\":3}},{\"text\":\"The new ideas, categories, or experiences you introduced to the world.\",\"clusterImpact\":{\"CREATOR\":5,\"ENTREPRENEUR\":3}}]",
+                            TestId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            Text = "At the end of it all, you measure success by..."
                         });
                 });
 
@@ -1011,6 +1209,12 @@ namespace MindScorePlatform.Infrastructure.Migrations
                             Id = new Guid("00000000-0000-0000-0000-000000000001"),
                             CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "MindType Assessment"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Career Fit Assessment"
                         });
                 });
 

@@ -70,13 +70,14 @@ class _TestScreenState extends ConsumerState<TestScreen> {
   // ── Navigation ─────────────────────────────────────────────────────────────
 
   /// Navigates to the correct results screen once a result is available.
-  void _navigateToResults(String? typeCode) {
+  void _navigateToResults(String? typeCode, String? testName) {
     if (!mounted) return;
-    context.go(
-      typeCode == 'MIND_SCORE'
-          ? AppRoutes.mindScoreResults
-          : AppRoutes.results,
-    );
+    final route = switch (typeCode) {
+      'MIND_SCORE' => AppRoutes.mindScoreResults,
+      _ when testName == 'Career Fit Assessment' => AppRoutes.careerFitResults,
+      _ => AppRoutes.results,
+    };
+    context.go(route);
   }
 
   // ── Quit dialog ────────────────────────────────────────────────────────────
@@ -114,7 +115,7 @@ class _TestScreenState extends ConsumerState<TestScreen> {
     // Navigate to results as soon as a result arrives.
     ref.listen<TestState>(testProvider, (prev, next) {
       if (next.result != null && prev?.result == null) {
-        _navigateToResults(next.result!.typeCode);
+        _navigateToResults(next.result!.typeCode, next.result!.testName);
       }
     });
 

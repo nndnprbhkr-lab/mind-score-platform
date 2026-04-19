@@ -32,6 +32,7 @@ import '../../../widgets/mpi/mpi_dimension_row.dart';
 import '../../../widgets/mpi/mpi_action_plan_card.dart';
 import '../../test/screens/mpi_follow_up_screen.dart';
 import '../providers/results_provider.dart';
+import 'relationship_dynamics_results_screen.dart';
 
 // ─── _MpiDisplayData ─────────────────────────────────────────────────────────
 
@@ -230,6 +231,12 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   @override
   Widget build(BuildContext context) {
     final test = ref.watch(testProvider);
+
+    // Route Relationship Dynamics Assessment to its own screen
+    if (test.result?.testName == 'Relationship Dynamics Assessment') {
+      return const RelationshipDynamicsResultsScreen();
+    }
+
     // Filter out MIND_SCORE results — they belong to a separate screen.
     final result = test.result?.typeCode == 'MIND_SCORE' ? null : test.result;
 
@@ -1073,10 +1080,12 @@ class _ShareButton extends StatelessWidget {
 
 // ─── Follow-up banner ─────────────────────────────────────────────────────────
 
-/// Banner shown at the bottom of the results screen when AI-generated
-/// follow-up questions are available but not yet answered.
+/// Manages the follow-up call-to-action area at the bottom of the results
+/// screen.  Three states:
 ///
-/// Hidden when: result is null, aiFollowUp is null, or answers already exist.
+/// • No follow-up data           → hidden
+/// • Questions exist, unanswered → purple CTA banner (tap to begin)
+/// • Questions answered          → read-only "Profile Refined" badge
 class _FollowUpBanner extends StatelessWidget {
   final ResultModel? result;
   final WidgetRef ref;
@@ -1094,8 +1103,12 @@ class _FollowUpBanner extends StatelessWidget {
     final answers   = followUp['answers']   as List<dynamic>? ?? [];
     final tensions  = followUp['tensions']  as List<dynamic>? ?? [];
 
-    if (questions.isEmpty || answers.isNotEmpty) return const SizedBox.shrink();
+    if (questions.isEmpty) return const SizedBox.shrink();
 
+    // Scenario C — follow-up already completed.
+    if (answers.isNotEmpty) return const _ProfileRefinedBadge();
+
+    // Scenario B — questions available, not yet answered.
     final count = tensions.length;
     final label = count == 1
         ? '1 dimension needs clarification'
@@ -1112,8 +1125,19 @@ class _FollowUpBanner extends StatelessWidget {
             ),
           ),
         );
+        if (!context.mounted) return;
         if (popped == true) {
           ref.read(resultsProvider.notifier).load();
+        } else {
+          // User closed without completing — reassure them the option stays.
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No worries — you can refine your profile anytime from this screen.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       },
       child: Container(
@@ -1154,6 +1178,65 @@ class _FollowUpBanner extends StatelessWidget {
                 color: Colors.white70, size: 16),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── _ProfileRefinedBadge ─────────────────────────────────────────────────────
+
+/// Read-only confirmation card shown after the user completes the follow-up
+/// questions.  Replaces the purple CTA banner — not tappable.
+class _ProfileRefinedBadge extends StatelessWidget {
+  const _ProfileRefinedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.green.withOpacity(0.35)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.green,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Profile Refined',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Your answers have been applied to your profile.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

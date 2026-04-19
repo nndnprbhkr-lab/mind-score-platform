@@ -206,7 +206,7 @@ public sealed class AdaptiveQuestionService : IAdaptiveQuestionService
         Code = q.Code,
         QuestionType = q.QuestionType,
         ScenarioOptions = q.ScenarioOptionsJson is not null
-            ? JsonSerializer.Deserialize<object>(q.ScenarioOptionsJson)
+            ? JsonSerializer.Deserialize<JsonElement>(q.ScenarioOptionsJson)
             : null,
         ContextTags = q.ContextTagsJson is not null
             ? JsonSerializer.Deserialize<List<string>>(q.ContextTagsJson)

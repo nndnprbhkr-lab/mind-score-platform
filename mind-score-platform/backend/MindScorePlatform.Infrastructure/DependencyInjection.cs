@@ -10,6 +10,7 @@ using MindScorePlatform.Infrastructure.Persistence;
 using MindScorePlatform.Infrastructure.Repositories;
 using MindScorePlatform.Infrastructure.Services;
 using MindScorePlatform.Infrastructure.Services.Mpi;
+using MindScorePlatform.Infrastructure.Services.Scoring;
 
 namespace MindScorePlatform.Infrastructure;
 
@@ -45,6 +46,13 @@ public static class DependencyInjection
 
         services.AddHttpClient();
         services.AddScoped<IAiFollowUpService, AiFollowUpService>();
+
+        // Scoring pipelines — order matters: specific before catch-all.
+        services.AddScoped<IScoringPipeline, MindScoreScoringPipeline>();
+        services.AddScoped<IScoringPipeline, CareerFitScoringPipeline>();
+        services.AddScoped<IScoringPipeline, RelationshipDynamicsScoringPipeline>();
+        services.AddScoped<IScoringPipeline, MpiScoringPipeline>();
+        services.AddScoped<IScoringPipelineFactory, ScoringPipelineFactory>();
 
         services.AddScoped<ITestService, TestService>();
         services.AddScoped<IQuestionService, QuestionService>();

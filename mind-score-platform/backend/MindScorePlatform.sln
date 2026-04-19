@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindScorePlatform.Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindScorePlatform.WebApi", "MindScorePlatform.WebApi\MindScorePlatform.WebApi.csproj", "{A7461A18-691C-4F7D-A26A-4EB1C6DD0677}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MindScorePlatform.Tests", "MindScorePlatform.Tests\MindScorePlatform.Tests.csproj", "{B8F6E5C2-8D7A-4E9F-A1B2-3C9D4E5F6A7B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{A7461A18-691C-4F7D-A26A-4EB1C6DD0677}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7461A18-691C-4F7D-A26A-4EB1C6DD0677}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7461A18-691C-4F7D-A26A-4EB1C6DD0677}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8F6E5C2-8D7A-4E9F-A1B2-3C9D4E5F6A7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8F6E5C2-8D7A-4E9F-A1B2-3C9D4E5F6A7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8F6E5C2-8D7A-4E9F-A1B2-3C9D4E5F6A7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8F6E5C2-8D7A-4E9F-A1B2-3C9D4E5F6A7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

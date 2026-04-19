@@ -62,24 +62,12 @@ public sealed class MpiScoringEngine : IMpiScoringEngine
         string JPPole = percentages["JP"] >= 50 ? "S" : "A";
 
         // STEP 5 — STRENGTH CLASSIFICATION
-        static string Classify(double pct)
-        {
-            double dev = Math.Abs(pct - 50);
-            return dev switch
-            {
-                <= 10 => "Slight",
-                <= 20 => "Moderate",
-                <= 35 => "Clear",
-                _ => "Strong"
-            };
-        }
-
         var dimensions = new Dictionary<string, MpiDimensionScore>
         {
-            ["EnergySource"]   = new() { Percentage = percentages["EI"], DominantPole = EIPole, Strength = Classify(percentages["EI"]) },
-            ["PerceptionMode"] = new() { Percentage = percentages["SN"], DominantPole = SNPole, Strength = Classify(percentages["SN"]) },
-            ["DecisionStyle"]  = new() { Percentage = percentages["TF"], DominantPole = TFPole, Strength = Classify(percentages["TF"]) },
-            ["LifeApproach"]   = new() { Percentage = percentages["JP"], DominantPole = JPPole, Strength = Classify(percentages["JP"]) },
+            ["EnergySource"]   = new() { Percentage = percentages["EI"], DominantPole = EIPole, Strength = TensionDetector.ClassifyStrength(percentages["EI"]) },
+            ["PerceptionMode"] = new() { Percentage = percentages["SN"], DominantPole = SNPole, Strength = TensionDetector.ClassifyStrength(percentages["SN"]) },
+            ["DecisionStyle"]  = new() { Percentage = percentages["TF"], DominantPole = TFPole, Strength = TensionDetector.ClassifyStrength(percentages["TF"]) },
+            ["LifeApproach"]   = new() { Percentage = percentages["JP"], DominantPole = JPPole, Strength = TensionDetector.ClassifyStrength(percentages["JP"]) },
         };
 
         // STEP 6 — TYPE CODE CONSTRUCTION

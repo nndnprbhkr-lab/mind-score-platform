@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MindScorePlatform.Domain.Enums;
 
 namespace MindScorePlatform.Application.DTOs;
@@ -22,7 +23,7 @@ public sealed class QuestionDto
     /// Deserialized client-side to render multiple-choice scenario options.
     /// Each option contains display text and hidden trait score mappings.
     /// </summary>
-    public object? ScenarioOptions { get; init; }
+    public JsonElement? ScenarioOptions { get; init; }
 
     /// <summary>
     /// Context tags for this question. Null = relevant to all contexts.

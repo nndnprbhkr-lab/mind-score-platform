@@ -50,6 +50,8 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Name).IsRequired().HasColumnName("name");
             entity.Property(x => x.CreatedAtUtc).HasColumnName("createdatutc");
             entity.HasData(MpiSeed.Test);
+            entity.HasData(CareerFitSeed.Test);
+            entity.HasData(RelationshipDynamicsSeed.Test);
         });
 
         modelBuilder.Entity<Question>(entity =>
@@ -83,6 +85,8 @@ public sealed class AppDbContext : DbContext
                   .HasForeignKey(x => x.AgeBandId)
                   .IsRequired(false);
             entity.HasData(MpiSeed.Questions);
+            entity.HasData(CareerFitSeed.Questions);
+            entity.HasData(RelationshipDynamicsSeed.Questions);
         });
 
         modelBuilder.Entity<Response>(entity =>

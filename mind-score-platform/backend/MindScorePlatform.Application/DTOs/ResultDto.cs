@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MindScorePlatform.Domain.Enums;
 
 namespace MindScorePlatform.Application.DTOs;
@@ -13,8 +14,8 @@ public sealed class ResultDto
     public string TypeName { get; init; } = string.Empty;
     public string Emoji { get; init; } = string.Empty;
     public string Tagline { get; init; } = string.Empty;
-    public object? DimensionScores { get; init; }
-    public object? Insights { get; init; }
+    public JsonElement? DimensionScores { get; init; }
+    public JsonElement? Insights { get; init; }
     public DateTime CreatedAtUtc { get; init; }
 
     // ── Context-aware fields ──────────────────────────────────────────────────
@@ -28,14 +29,14 @@ public sealed class ResultDto
     /// Leadership → LeadershipInsightsDto, PersonalDevelopment → PersonalDevelopmentInsightsDto.
     /// Null for General context.
     /// </summary>
-    public object? ContextInsights { get; init; }
+    public JsonElement? ContextInsights { get; init; }
 
     /// <summary>Ordered list of question IDs served during the adaptive session.</summary>
     public IReadOnlyList<string>? AdaptivePath { get; init; }
 
     /// <summary>AI follow-up questions, answers, and resolved tensions. Null if no follow-up was run.</summary>
-    public object? AiFollowUp { get; init; }
+    public JsonElement? AiFollowUp { get; init; }
 
     /// <summary>Algorithm confidence per dimension (0–100). Low = AI follow-up targeted it.</summary>
-    public object? DimensionConfidence { get; init; }
+    public JsonElement? DimensionConfidence { get; init; }
 }

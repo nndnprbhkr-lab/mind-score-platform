@@ -20,15 +20,6 @@ public sealed class ResultRepository : IResultRepository
     public Task<Result?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         => _db.Results.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
-    public Task<Result?> GetByUserAndTestAsync(Guid userId, Guid testId, CancellationToken cancellationToken)
-        => _db.Results.FirstOrDefaultAsync(r => r.UserId == userId && r.TestId == testId, cancellationToken);
-
-    public async Task AddAsync(Result result, CancellationToken cancellationToken)
-    {
-        _db.Results.Add(result);
-        await _db.SaveChangesAsync(cancellationToken);
-    }
-
     public async Task AddOrReplaceAsync(Result result, CancellationToken cancellationToken)
     {
         await _db.Database.ExecuteSqlRawAsync(@"
@@ -78,12 +69,27 @@ public sealed class ResultRepository : IResultRepository
             result.CreatedAtUtc);
     }
 
-    public async Task UpdateFollowUpAsync(Guid id, string aiFollowUpJson, CancellationToken cancellationToken)
+    public async Task UpdateAfterFollowUpAsync(
+        Guid id,
+        string aiFollowUpJson,
+        string dimensionScoresJson,
+        string insightsJson,
+        string personalityType,
+        string personalityName,
+        string personalityEmoji,
+        string personalityTagline,
+        CancellationToken cancellationToken)
     {
         await _db.Results
             .Where(r => r.Id == id)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(r => r.AiFollowUpJson, aiFollowUpJson),
-                cancellationToken);
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.AiFollowUpJson,      aiFollowUpJson)
+                .SetProperty(r => r.DimensionScoresJson, dimensionScoresJson)
+                .SetProperty(r => r.InsightsJson,        insightsJson)
+                .SetProperty(r => r.PersonalityType,     personalityType)
+                .SetProperty(r => r.PersonalityName,     personalityName)
+                .SetProperty(r => r.PersonalityEmoji,    personalityEmoji)
+                .SetProperty(r => r.PersonalityTagline,  personalityTagline),
+            cancellationToken);
     }
 }

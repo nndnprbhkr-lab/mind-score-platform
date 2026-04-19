@@ -46,16 +46,12 @@ class _MpiShareModalState extends State<_MpiShareModal> {
   String get _shareUrl => 'mindscore.app/result/${widget.result.shareToken}';
 
   Future<Uint8List?> _captureCard() async {
-    try {
-      final boundary = _repaintKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
-      if (boundary == null) return null;
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      return byteData?.buffer.asUint8List();
-    } catch (_) {
-      return null;
-    }
+    final boundary = _repaintKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    return byteData?.buffer.asUint8List();
   }
 
   Future<void> _shareToPlaftorm(String platform) async {
@@ -74,6 +70,12 @@ class _MpiShareModalState extends State<_MpiShareModal> {
         text: 'I am ${widget.result.typeName} on MindScore MindType. '
             'Discover yours at mindscore.app',
       );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to capture card. Please try again.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _capturingPlatform = null);
     }
@@ -93,6 +95,12 @@ class _MpiShareModalState extends State<_MpiShareModal> {
       await Share.shareXFiles(
         [XFile.fromData(bytes, name: 'mindscore_mpi_result.png', mimeType: 'image/png')],
       );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to save image. Please try again.')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _capturingPlatform = null);
     }

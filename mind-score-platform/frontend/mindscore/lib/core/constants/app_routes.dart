@@ -52,6 +52,12 @@ class AppRoutes {
   /// action steps tailored to the user's age band.
   static const String mindScoreResults = '/results/mindscore';
 
+  /// Career Fit Assessment results screen.
+  ///
+  /// Shows the user's primary career archetype, all 8 cluster fit bars,
+  /// strengths, growth areas, and ideal roles.
+  static const String careerFitResults = '/results/career-fit';
+
   /// Admin panel — restricted to users with the `admin` role.
   static const String adminPanel       = '/admin';
 

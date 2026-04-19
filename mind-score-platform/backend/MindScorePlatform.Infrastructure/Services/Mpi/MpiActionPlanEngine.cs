@@ -38,7 +38,7 @@ public sealed class MpiActionPlanEngine : IMpiActionPlanEngine
     public ActionPlanDto Generate(
         Guid resultId,
         string typeCode,
-        IReadOnlyDictionary<string, MpiDimensionScoreData> dimensions)
+        IReadOnlyDictionary<string, MpiDimensionScore> dimensions)
     {
         var steps = new List<(ActionPlanStepDto Step, double Deviation)>();
 

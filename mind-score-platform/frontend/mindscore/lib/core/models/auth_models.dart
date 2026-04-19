@@ -197,7 +197,7 @@ class ResultModel {
   final String? tagline;
 
   /// Raw dimension scores — a JSON list for MindScore, a JSON map for MPI.
-  final dynamic dimensionScores;
+  final Object? dimensionScores;
 
   /// Extended insight data — strengths, growth areas, career paths, etc.
   final Map<String, dynamic>? insights;
