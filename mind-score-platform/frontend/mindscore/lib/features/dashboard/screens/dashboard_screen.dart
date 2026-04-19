@@ -145,10 +145,13 @@ Future<void> _handleTestStart(
 
   if (!context.mounted) return;
 
-  // MindScore is a cognitive (context-agnostic) assessment — skip the context
-  // picker and use General context.  MPI assessments show the context selector
-  // so the adaptive engine can serve context-tuned questions.
-  if (isMindScore) {
+  // Assessments that are standalone (fixed question sets, no adaptive branching)
+  // skip the context picker and start directly with General context.
+  // MPI/MindType assessments show the context selector for adaptive question tuning.
+  // Relationship Dynamics is a standalone fixed assessment — no adaptive context.
+  final isStandalone = isMindScore ||
+      test.name.toLowerCase().contains('relationship dynamics');
+  if (isStandalone) {
     context.go(
       AppRoutes.testWithId(test.id),
       extra: {'testName': test.name, 'context': 0},
